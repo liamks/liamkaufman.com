@@ -1,0 +1,13 @@
+<div class='social'>
+
+  <a id="twitter" href="https://twitter.com/liamkaufman"><span></span>@liamkaufman</a>
+  <a id="github" href="https://github.com/liamks"><span></span>@liamks</a>
+  <a id="linked-in" href="http://www.linkedin.com/pub/liam-kaufman/1b/7b4/2a4"><span></span>Liam Kaufman</a> 
+</div>
+
+{% if site.post_asides.size %}
+  {% include_array post_asides %}
+{% else %}
+  {% include_array default_asides %}
+{% endif %}
+
