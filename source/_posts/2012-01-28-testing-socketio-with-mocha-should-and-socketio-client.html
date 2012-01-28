@@ -1,0 +1,282 @@
+---
+layout: post
+title: Testing Socket.IO with Mocha, Should.js and Socket.IO Client
+comments: true
+---
+
+<p>
+I’m currently in the midst of creating an application that utilizes <a href="http://socket.io/">Socket.IO</a> for real-time communication between users. Using  <a href="http://visionmedia.github.com/mocha/">mocha</a> and <a href="https://github.com/visionmedia/should.js">should.js</a> I was able to test objects within my node app. However, I quickly found that there were some odd synchronization issues between clients that the test cases couldn't cover. To test the interaction between clients I needed a way to programatically communicate to my node server: Enter <a href="https://github.com/LearnBoost/socket.io-client">socket.io-client</a>.
+</p>
+<p>
+<a class="github" href="https://github.com/liamks/Testing-Socket.IO"><span></span>Testing Socket.IO on Github</a>
+</p>
+<h2>
+  Writing Tests For your Socket.io Application
+</h2>
+<p>
+As an example of how to test your socket.io application we’ll create a small chat application and test it using: <a href="https://github.com/LearnBoost/socket.io-client">socket.io-client</a>, <a href="http://visionmedia.github.com/mocha/">mocha</a> and <a href="https://github.com/visionmedia/should.js">should.js</a>.
+</p>
+<p>
+Our chat server should be able to:
+</p>
+<ol class='ordered-list'>
+  <li>broadcast that a new user has joined</li>
+  <li>broadcast messages to the whole group</li>
+  <li>handle private messages between clients</li>
+</ol>
+<p> 
+If you hit any roadblocks see <a href="#trouble-shooting">Trouble shooting</a> at the bottom of this post.
+</p>
+<p>
+Without further ado, below is the bare essentials for our socket.IO chat server (chat-server.js) and our tests (tests/test-chat-server.js).
+</p>
+```javascript Server V0.1
+var io = require('socket.io').listen(5000);
+
+io.sockets.on('connection', function (socket) {
+
+});
+```
+
+```javascript Tests
+var should = require('should');
+var io = require('socket.io-client');
+
+var socketURL = 'http://0.0.0.0:5000';
+
+var options ={
+  transports: ['websocket'],
+  'force new connection': true
+};
+
+var chatUser1 = {'name':'Tom'};
+var chatUser2 = {'name':'Sally'};
+var chatUser3 = {'name':'Dana'};
+  
+describe("Chat Server",function(){
+
+});
+```
+<h3>First Test</h3>
+<p>
+Within the describe function (line 16 in tests) we will add our first test that determines if our chat server notifies all users that a new user has joined. It's important to disconnect both clients once this test is over, otherwise the second test will trigger this test's 'new user' event.
+</p>
+
+```javascript Test 1 - One user connects, both users should be notified.
+it('Should broadcast new user to all users', function(done){
+  var client1 = io.connect(socketURL, options);
+  
+  client1.on('connect', function(data){
+    client1.emit('connection name', chatUser1); 
+
+    /* Since first client is connected, we connect
+    the second client. */
+    var client2 = io.connect(socketURL, options);
+
+    client2.on('connect', function(data){
+      client2.emit('connection name', chatUser2);
+    });
+
+    client2.on('new user', function(usersName){
+      usersName.should.equal(chatUser2.name + " has joined.");
+      client2.disconnect();
+    });
+
+  });
+
+  var numUsers = 0;
+  client1.on('new user', function(usersName){
+    numUsers += 1;
+
+    if(numUsers === 2){
+      usersName.should.equal(chatUser2.name + " has joined.");
+      client1.disconnect();
+      done();
+    }
+  }); 
+});
+```
+<p>
+Now that our first test is complete, let's run the server.
+</p>
+```bash Run the server
+node chat-server.js
+```
+<p>
+In another terminal window we can run the tests.
+</p>
+```bash Run the tests 
+mocha -R spec
+```
+<p>
+And both tests will fail (times out to be specific)! To pass the tests we simply update the chat-server.js to the following:
+</p>
+```javascript Server V0.2
+var io = require('socket.io').listen(5000);
+
+io.sockets.on('connection', function (socket) {
+  socket.on('connection name',function(user){
+    io.sockets.emit('new user', user.name + " has joined.");
+  })
+
+});
+```
+<p>
+When you run the tests again they should both pass. 
+</p>
+
+<h3>Second Test</h3>
+<p>
+Now, we'll add the second test that determines if a message sent from one client is sent to all the clients connected to the chat server. It may not initially be obvious why I'm using 3 clients, but it should be in the 3rd test. To determine if all 3 clients have received a message we keep a counter (messges) and check that each received message is the correct message.
+</p>
+```javascript Test 2 - User sends a message to chat room
+it('Should be able to broadcast messages', function(done){
+  var client1, client2, client3;
+  var message = 'Hello World';
+  var messages = 0;
+
+  var checkMessage = function(client){
+    client.on('message', function(msg){
+      message.should.equal(msg);
+      client.disconnect();
+      messages++;
+      if(messages === 3){
+        done(); 
+      };
+    });
+  };
+
+  client1 = io.connect(socketURL, options);
+  checkMessage(client1);
+
+  client1.on('connect', function(data){
+    client2 = io.connect(socketURL, options);
+    checkMessage(client2);
+
+    client2.on('connect', function(data){
+      client3 = io.connect(socketURL, options);
+      checkMessage(client3);
+
+      client3.on('connect', function(data){
+        client2.send(message);
+      });
+    });
+  });
+});
+```
+<p>
+If you run the tests again it should fail! We can fix this by updating the server code to look like:
+</p>
+```javascript Server V0.3
+var io = require('socket.io').listen(5000);
+
+io.sockets.on('connection', function (socket) {
+  socket.on('connection name',function(user){
+    io.sockets.emit('new user', user.name + " has joined.");
+  });
+
+  socket.on('message', function(msg){
+    io.sockets.emit('message', msg);
+  });
+});
+```
+<h3>Third Test</h3>
+<p>With the first two bits of functionality complete, and tested, we now need to test that 1) a client can send a private message to another client and 2) no other clients receive that message. At minimum we need 3 clients to test this condition. Once all 3 clients have connected, the 3rd client will send a private message to the first client. It's easy to test that the first client has received the message, but how do we test that the 2nd client has not? The solution I'm using below is that the test simply waits 40 milliseconds and if only 1 message has been received, there's a strong chance that client 2 has not received a message. I'm not sure how to write the test to be 100% sure that the client has not received the message - any thoughts?
+</p>
+
+```javascript  Test 3 - User sends a private message to another user.
+it('Should be able to send private messages', function(done){
+  var client1, client2, client3;
+  var message = {to: chatUser1.name, txt:'Private Hello World'};
+  var messages = 0;
+
+  var completeTest = function(){
+    messages.should.equal(1);
+    client1.disconnect();
+    client2.disconnect();
+    client3.disconnect();
+    done();
+  };
+
+  var checkPrivateMessage = function(client){
+    client.on('private message', function(msg){
+      message.txt.should.equal(msg.txt);
+      msg.from.should.equal(chatUser3.name);
+      messages++;
+      if(client === client1){
+        /* The first client has received the message
+        we give some time to ensure that the others
+        will not receive the same message. */
+        setTimeout(completeTest, 40);
+      };
+    });
+  };
+
+  client1 = io.connect(socketURL, options);
+  checkPrivateMessage(client1);
+
+  client1.on('connect', function(data){
+    client1.emit('connection name', chatUser1);
+    client2 = io.connect(socketURL, options);
+    checkPrivateMessage(client2);
+
+    client2.on('connect', function(data){
+      client2.emit('connection name', chatUser2);
+      client3 = io.connect(socketURL, options);
+      checkPrivateMessage(client3);
+
+      client3.on('connect', function(data){
+        client3.emit('connection name', chatUser3);
+        client3.emit('private message', message) 
+      });
+    });
+  });
+});
+```
+<p>
+Once again, running the tests should fail. Lets add code to enable private messages. Ideally we'd use Redis Pub/Sub to simplify message passing, but for the sake of brevity we'll omit it here. We'll keep track of clients and their sockets using the clients hash. The hashe's key will be the client's name, and the value will be the client's socket. When the client disconnects we delete that entry from the hash.
+</p>
+```javascript Server V0.4
+var io = require('socket.io').listen(5000);
+var clients = {};
+
+io.sockets.on('connection', function (socket) {
+  var userName;
+  socket.on('connection name',function(user){
+    userName = user.name;
+    clients[user.name] = socket;
+    io.sockets.emit('new user', user.name + " has joined.");
+  });
+
+  socket.on('message', function(msg){
+    io.sockets.emit('message', msg);
+  });
+
+  socket.on('private message', function(msg){
+    fromMsg = {from:userName, txt:msg.txt}
+    clients[msg.to].emit('private message', fromMsg);  
+  });
+
+  socket.on('disconnect', function(){
+    delete clients[userName];
+  });
+});
+```
+<p>
+Congratulations, you have a node.js chat server and you've tested it!
+</p>
+<p>
+<a class="github" href="https://github.com/liamks/Testing-Socket.IO"><span></span>Testing Socket.IO on Github</a>
+</p>
+<h3 id="trouble-shooting">
+Trouble Shooting
+</h3>
+<p>
+<ul class='unordered-list'>
+  <li>Have you installed node.io-client, mocha and should?</li>
+  <li>Did you install any of the modules locally, but in another folder? If so try doing a global install.</li>
+  <li>Make sure you restart the server before each test run.</li>
+  <li>Running <code>mocha -R spec</code> will not work within the test folder, this command looks for the test folder, so <code>cd ..</code> if you're in the test folder.</li>
+  <li>The version of socket.io-client that was in the npm repositories at the time of writing this <a href="https://github.com/LearnBoost/socket.io-client/issues/372">would not connect to the node server</a>. To get the latest version I ran: <code>npm install https://github.com/LearnBoost/socket.io-client/zipball/master</code></li>
+</ul>
+</p>
