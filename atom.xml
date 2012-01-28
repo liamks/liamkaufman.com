@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Liam Kaufman]]></title>
-  <link href="http://liamks.github.com/liamkaufman/atom.xml" rel="self"/>
-  <link href="http://liamks.github.com/liamkaufman/"/>
-  <updated>2012-01-27T21:35:54-05:00</updated>
-  <id>http://liamks.github.com/liamkaufman/</id>
+  <link href="http://liamkaufman.com/atom.xml" rel="self"/>
+  <link href="http://liamkaufman.com/"/>
+  <updated>2012-01-27T21:39:40-05:00</updated>
+  <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Testing Socket.IO with Mocha, Should.js and Socket.IO Client]]></title>
-    <link href="http://liamks.github.com/liamkaufman/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/"/>
+    <link href="http://liamkaufman.com/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/"/>
     <updated>2012-01-28T00:00:00-05:00</updated>
-    <id>http://liamks.github.com/liamkaufman/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client</id>
+    <id>http://liamkaufman.com/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client</id>
     <content type="html"><![CDATA[<p>
 I’m currently in the midst of creating an application that utilizes <a href="http://socket.io/">Socket.IO</a> for real-time communication between users. Using  <a href="http://visionmedia.github.com/mocha/">mocha</a> and <a href="https://github.com/visionmedia/should.js">should.js</a> I was able to test objects within my node app. However, I quickly found that there were some odd synchronization issues between clients that the test cases couldn&#8217;t cover. To test the interaction between clients I needed a way to programatically communicate to my node server: Enter <a href="https://github.com/LearnBoost/socket.io-client">socket.io-client</a>.
 </p>
@@ -468,9 +468,9 @@ Trouble Shooting
   
   <entry>
     <title type="html"><![CDATA[Examples I Want to See in JavaScript Frameworks.]]></title>
-    <link href="http://liamks.github.com/liamkaufman/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks/"/>
+    <link href="http://liamkaufman.com/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks/"/>
     <updated>2011-12-13T00:00:00-05:00</updated>
-    <id>http://liamks.github.com/liamkaufman/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks</id>
+    <id>http://liamkaufman.com/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks</id>
     <content type="html"><![CDATA[<p>
   With the public release of <a href="http://emberjs.com">ember.js</a>,
   I excitedly poured over the examples hoping to find a framework that 
@@ -540,9 +540,9 @@ Trouble Shooting
   
   <entry>
     <title type="html"><![CDATA[What is the best way of Mastering JavaScript?]]></title>
-    <link href="http://liamks.github.com/liamkaufman/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript/"/>
+    <link href="http://liamkaufman.com/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript/"/>
     <updated>2011-09-09T00:00:00-04:00</updated>
-    <id>http://liamks.github.com/liamkaufman/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript</id>
+    <id>http://liamkaufman.com/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript</id>
     <content type="html"><![CDATA[<p>
 I want to master JavaScript. Before humbly doing so, I think it’s important to define what I think mastering JS consists of. In my opinion there are two parts to mastering a programming language. The first is mastering the language itself: syntax, important functions, classes, idioms, etc. The second part is mastering the programming paradigm, or paradigms, that the language falls in. This second part is difficult with JS, as it is <a href="http://en.wikipedia.org/wiki/JavaScript">object oriented, functional and imperative </a>. Thus, to master JS I must master both parts: 1) the language and 2) the paradigms.
 </p>
@@ -574,9 +574,9 @@ Is this the best way of accomplishing my goal of mastering JS? Discuss on <a hre
   
   <entry>
     <title type="html"><![CDATA[Liamkaufman.com gets a new look]]></title>
-    <link href="http://liamks.github.com/liamkaufman/blog/2011/08/23/liamkaufmancom-gets-a-new-look/"/>
+    <link href="http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/"/>
     <updated>2011-08-23T00:00:00-04:00</updated>
-    <id>http://liamks.github.com/liamkaufman/blog/2011/08/23/liamkaufmancom-gets-a-new-look</id>
+    <id>http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look</id>
     <content type="html"><![CDATA[<p>
 After 3 years without change, I&#8217;ve redone my personal website using Jekyll and Bootstrap. The previous version of liamkaufman.com was hosted on Google App Engine and consisted of a very basic CMS that I made before I knew what I was doing. I was both unhappy with the look of the site, and the code behind it. At the same time I was interested in using Jekyll, as I wanted to avoid the hassles associated with database backed sites. I also appreciate the fact that my site, and it’s content are easy to deploy and update via Github. 
 </p>
@@ -587,9 +587,9 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
   
   <entry>
     <title type="html"><![CDATA[pyItunes, a Python iTunes Library Parser]]></title>
-    <link href="http://liamks.github.com/liamkaufman/blog/2009/03/18/pyItunes-a-python-itunes-library-parser/"/>
+    <link href="http://liamkaufman.com/blog/2009/03/18/pyItunes-a-python-itunes-library-parser/"/>
     <updated>2009-03-18T00:00:00-04:00</updated>
-    <id>http://liamks.github.com/liamkaufman/blog/2009/03/18/pyItunes-a-python-itunes-library-parser</id>
+    <id>http://liamkaufman.com/blog/2009/03/18/pyItunes-a-python-itunes-library-parser</id>
     <content type="html"><![CDATA[<p>
 	In an effort to add some personality to this site I thought I&#8217;d list my favourite songs. iTunes provides
 	a mechanism for users to rate songs, by giving a song 0 to 5 stars. After years of listening to music, and rating it,
