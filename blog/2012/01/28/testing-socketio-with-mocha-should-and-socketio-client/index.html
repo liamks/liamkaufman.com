@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Liam Kaufman</title>
+  <title>Testing Socket.IO with Mocha, Should.js and Socket.IO Client - Liam Kaufman</title>
   <meta name="author" content="Liam Kaufman">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://liamks.github.com/liamkaufman">
+  <link rel="canonical" href="http://liamks.github.com/liamkaufman/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client">
 
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -77,15 +77,12 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article class="hentry" role="article">
   
-  
-  
-    <article>
-      
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/">Testing Socket.IO With Mocha, Should.js and Socket.IO Client</a></h1>
+      <h1 class="entry-title">Testing Socket.IO With Mocha, Should.js and Socket.IO Client</h1>
     
     
       <p class="meta">
@@ -108,7 +105,7 @@
   </header>
 
 
-  <div class="entry-content"><p>
+<div class="entry-content"><p>
 I’m currently in the midst of creating an application that utilizes <a href="http://socket.io/">Socket.IO</a> for real-time communication between users. Using  <a href="http://visionmedia.github.com/mocha/">mocha</a> and <a href="https://github.com/visionmedia/should.js">should.js</a> I was able to test objects within my node app. However, I quickly found that there were some odd synchronization issues between clients that the test cases couldn&#8217;t cover. To test the interaction between clients I needed a way to programatically communicate to my node server: Enter <a href="https://github.com/LearnBoost/socket.io-client">socket.io-client</a>.
 </p>
 <p>
@@ -554,22 +551,16 @@ Trouble Shooting
 </ul>
 </p>
 </div>
-  
-  
 
 
-    </article>
-  
-  
-    <article>
+  <footer>
+    <p class="meta">
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks/">Examples I Want to See in JavaScript Frameworks.</a></h1>
-    
-    
-      <p class="meta">
-        
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Liam Kaufman</span></span>
+
+      
 
 
 
@@ -581,246 +572,42 @@ Trouble Shooting
   
 
 
-<time datetime="2011-12-13T00:00:00-05:00" pubdate data-updated="true">Dec 13<span>th</span>, 2011</time>
-        
-      </p>
+<time datetime="2012-01-28T00:00:00-05:00" pubdate data-updated="true">Jan 28<span>th</span>, 2012</time>
+      
+
+
+    </p>
     
-  </header>
-
-
-  <div class="entry-content"><p>
-  With the public release of <a href="http://emberjs.com">ember.js</a>,
-  I excitedly poured over the examples hoping to find a framework that 
-  would make Creating, Reading, Updating and Deleting (CRUD) easier. When
-  push comes to shove, the vast majority of apps that I&#8217;ve worked on
-  involve CRUD. 
-</p>
-
-<p>
-  I want to see the following (excuse the pseudo code):<br />
-<figure class='code'><figcaption><span>Model</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">model</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">validation</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">m</span><span class="p">){...}</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Controller</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">controller</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">show</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">index</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">new</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">create</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="p">...</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Form</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&#39;&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;text&#39;</span> <span class="na">name=</span><span class="s">&#39;firstName&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;submit&#39;</span> <span class="na">value=</span><span class="s">&#39;submit&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'><span class="nt">&lt;/form&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-</p>
-
-<p>
-  Will your framework help me 1) write less code, 2) get things done
-  faster and 3) with less errors? Show me.
-</p>
-<p>
-  PS: I don&#8217;t want to diminish the tremendous effort it takes to create
-  a framework and release it, but please go the extra mile and provide
-  some concrete CRUD examples for a single class!
-</p>
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamks.github.com/liamkaufman/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/" data-via="liamkaufman" data-counturl="http://liamks.github.com/liamkaufman/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
 </div>
-  
-  
 
-
-    </article>
-  
-  
-    <article>
+    
+    <p class="meta">
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript/">What Is the Best Way of Mastering JavaScript?</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-09-09T00:00:00-04:00" pubdate data-updated="true">Sep 9<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-I want to master JavaScript. Before humbly doing so, I think it’s important to define what I think mastering JS consists of. In my opinion there are two parts to mastering a programming language. The first is mastering the language itself: syntax, important functions, classes, idioms, etc. The second part is mastering the programming paradigm, or paradigms, that the language falls in. This second part is difficult with JS, as it is <a href="http://en.wikipedia.org/wiki/JavaScript">object oriented, functional and imperative </a>. Thus, to master JS I must master both parts: 1) the language and 2) the paradigms.
-</p>
-
-<p>
-Before explaining how I’m going to accomplish this goal, it’s worth while for me to briefly explain why I want to. I have been programming for 4 years and I just recently finished a computer science degree. In school I completed assignments where I learned elements from the 3 major programming paradigms that JS falls into. Likewise, I spent the last year using JS, but I have not delved deeper into it. Since I have scratched the surface I have realized that I enjoy creating web applications, but I eagerly want to be better at it.
-</p>
-
-<p>
-Becoming a master will no doubt take years of effort, and countless hours, however I think the first four months will be critical - they will provide the foundation to build my knowledge upon. In the next four months I hope to accomplish the following (roughly in order):
-</p>
-<ol>
-	<li>Read <em>JavaScript: The Good Parts</em>, by Douglas Crockford. (I’ve started this part)</li>
-	<li>Examine jQuery’s source code.</li>
-	<li>Contribute to jQuery, most likely a bug fix.</li>
-	<li>Read <em>JavaScript Web Applications</em>, by Alex MacCaw.</li>
-	<li>Examine Backbone.js’s source code .</li>
-	<li>Contribute to Backbone.js</li>
-</ol>
-
-<p>
-While completing those six goals I plan on weaving what I’ve learning into projects that I’ll be undertaking in the next four months. My hope is that by reading books, and other people’s code, I’ll learn how to write better code and engineer larger JS applications. Furthermore, by actually working on projects I’ll reinforce what I’ve learned and I’ll have something tangible to show.
-</p>
-
-<p>
-Is this the best way of accomplishing my goal of mastering JS? Discuss on <a href="http://news.ycombinator.com/item?id=2979582">Hacker News.</a>
-</p></div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
+        <a class="basic-alignment left" href="/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks/" title="Previous Post: Examples I Want to See in JavaScript Frameworks.">&laquo; Examples I Want to See in JavaScript Frameworks.</a>
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/08/23/liamkaufmancom-gets-a-new-look/">Liamkaufman.com Gets a New Look</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-08-23T00:00:00-04:00" pubdate data-updated="true">Aug 23<span>rd</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-After 3 years without change, I&#8217;ve redone my personal website using Jekyll and Bootstrap. The previous version of liamkaufman.com was hosted on Google App Engine and consisted of a very basic CMS that I made before I knew what I was doing. I was both unhappy with the look of the site, and the code behind it. At the same time I was interested in using Jekyll, as I wanted to avoid the hassles associated with database backed sites. I also appreciate the fact that my site, and it’s content are easy to deploy and update via Github. 
-</p>
-<p>
-Overall the process of learning Jekyll and Bootstrap was much easier than anticipated. To learn Jekyll I examined the <a href="https://github.com/schacon/schacon.github.com">source code</a> behind <a href="http://schacon.github.com/">Scott Chacon’s blog</a>. Learning Bootstrap consisted of referencing CSS classes in my DOM and referencing the Bootstrap CSS file itself: not much to it.
-</p></div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/03/18/pyItunes-a-python-itunes-library-parser/">pyItunes, a Python iTunes Library Parser</a></h1>
-    
-    
-      <p class="meta">
-        
+    </p>
+  </footer>
+</article>
 
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-03-18T00:00:00-04:00" pubdate data-updated="true">Mar 18<span>th</span>, 2009</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-	In an effort to add some personality to this site I thought I&#8217;d list my favourite songs. iTunes provides
-	a mechanism for users to rate songs, by giving a song 0 to 5 stars. After years of listening to music, and rating it,
-	I have a large collection of rated songs. Manually copying and pasting each song into an HTML file seemed
-	 inefficient and time consuming, enter Python.
-</p>
-
-<p>
-	In an effort to learn Python, and parse my iTunes library, I created pyItunes, a Python module. pyItunes includes three classes that can parse the &#8220;iTunes Music Library.xml&#8221; file and convert it into list of Song objects. I decided to roll my own micro-xml parser that can only parse the iTunes xml file. Although, reinventing the wheel, especially an XML parser, is likely a horrible idea I felt it would be a good learning experience. In future versions I may swap an existing XML parser that is much faster and more efficient than the one I created.
-</p>
-
-<p>
-	<h4>Download pyItunes</h4>
-	<script src="http://gist.github.com/80911.js"></script>
-</p>
-
-<p>
-	<h4>pyItunes Usage</h4>
-	<script src="http://gist.github.com/79668.js"></script>
-
-</p></div>
-  
-  
-
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
+  </section>
+
+</div>
+
 <aside class="sidebar">
   <div class='social'>
 
@@ -861,7 +648,7 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
 <section>
   <h1>Latest Tweets</h1>
   <ul id="tweets">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   <script type="text/javascript">
     $.domReady(function(){
@@ -883,6 +670,7 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
 
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo"><p>
@@ -897,7 +685,10 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
       var disqus_shortname = 'liamkaufman';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamks.github.com/liamkaufman/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/';
+        var disqus_url = 'http://liamks.github.com/liamkaufman/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
