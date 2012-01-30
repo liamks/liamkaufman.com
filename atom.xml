@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2012-01-27T21:39:40-05:00</updated>
+  <updated>2012-01-30T00:51:47-05:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -463,6 +463,8 @@ Trouble Shooting
   <li>The version of socket.io-client that was in the npm repositories at the time of writing this <a href="https://github.com/LearnBoost/socket.io-client/issues/372">would not connect to the node server</a>. To get the latest version I ran: <code>npm install https://github.com/LearnBoost/socket.io-client/zipball/master</code></li>
 </ul>
 </p>
+<h3>Updates</h3>
+<p>Using coffeescript <a href="https://twitter.com/jamescarr">@jamescarr</a> refactored the above code so the server starts automatically for the tests: <a href="https://github.com/jamescarr/socket.io-test">socket.io-test</a></p>
 ]]></content>
   </entry>
   
