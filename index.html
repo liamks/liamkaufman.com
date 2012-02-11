@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="I’m currently in the midst of creating an application that utilizes Socket.IO for real-time communication between users. Using mocha and should.js I &hellip;">
+  <meta name="description" content="Recently I&#8217;ve been working with both the HTML 5 File API and Socket.IO and it occured to me that those technologies could be used to send, and &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,151 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/02/11/12-pushing-files-to-the-browser-using-deliveryjs-socketio-and-nodejs/">Pushing Files to the Browser Using Delivery.js, Socket.IO and Node.js</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-02-11T00:00:00-05:00" pubdate data-updated="true">Feb 11<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+Recently I&#8217;ve been working with both the HTML 5 File API and Socket.IO and it occured to me that those technologies could be used to send, and push, files between the client and server. Immediately I set about making delivery.js, a simple node module that makes it extremely easy to send and push files between the client and the server via Socket.IO. 
+</p>
+<p>
+I should note that this is my first node module, so constructive critism and feedback are welcome and encouraged! 
+</p>
+
+<h2> Example:  Pushing An Image To The Client</h2>
+<p>
+<a class="github" href="https://github.com/liamks/Delivery.js"><span></span>Delivery.js on Github</a>
+</p>
+<p>
+In the following example, once a client connects to the server an image will be pushed to the client. When the client receives the image, the image&#8217;s data URL is assigned to the src attribute of an img element.
+</p>
+
+<figure class='code'><figcaption><span>Client</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s1">&#39;http://0.0.0.0:5001&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">delivery</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Delivery</span><span class="p">(</span><span class="nx">socket</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;receive.start&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">fileUID</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;receiving a file!&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;receive.success&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">){</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">isImage</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="nx">file</span><span class="p">.</span><span class="nx">dataURL</span><span class="p">());</span>
+</span><span class='line'>      <span class="p">};</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>Server</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">io</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io&#39;</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">5001</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">dl</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;delivery&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">socket</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">delivery</span> <span class="o">=</span> <span class="nx">dl</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">socket</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;delivery.connect&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">delivery</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;sample-image.jpg&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">path</span> <span class="o">:</span> <span class="s1">&#39;./sample-image.jpg&#39;</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;send.success&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;File successfully sent to client!&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2> Advantages </h2>
+
+<p>
+While delivery.js is more of an experiment, there could be some advantages to using Web Sockets to transfer files. Once a Web Socket connection is established  messages (frames) sent between the client and server contain only 2 additional bytes of overhead. In contrast, a traditional POST request, and response, may have headers totaling <a href="http://websocket.org/quantum.html">871 bytes</a>. This could be a significant addition if many files are being sent, and would be even more significant if files are being divided into batches before being sent to the server. When pushing files to the client, the overhead of traditional polling methods provides an even starker contrast to Web Sockets.
+</p>
+
+<h2> Disadvantages </h2>
+
+<p>
+The most apparent disadvantage would be the fact that it bipasses traditional caching methods. Instead of caching based on a file&#8217;s URL, caching would be based on the content of the Web Socket&#8217;s message. One possibility would be to cache a base64, or text, version of the file within Redis for fast, in memory, access. 
+</p>
+
+<h2> Future </h2>
+<p>
+With <a href="http://gildas-lormeau.github.com/zip.js/">zip.js</a> files could be deflated, or inflated, within the browser. In-browser file zipping could have a positive impact on transfer speeds. To check the integrity of the unzipped file an md5 checksum could be generated client-side, using Paul Johnston&#8217;s <a href="http://pajhome.org.uk/crypt/md5/">JavaScript MD5</a> implementation, and then passed along with the zipped file.
+</p>
+
+<p>
+For more documentation and examples see Delivery.js on Github:<br />
+<a class="github" href="https://github.com/liamks/Delivery.js"><span></span>Delivery.js on Github</a>
+</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -837,6 +982,10 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/02/11/12-pushing-files-to-the-browser-using-deliveryjs-socketio-and-nodejs/">Pushing Files to the Browser Using Delivery.js, Socket.IO and Node.js</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/">Testing Socket.IO with Mocha, Should.js and Socket.IO Client</a>
       </li>
     
@@ -850,10 +999,6 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
     
       <li class="post">
         <a href="/blog/2011/08/23/liamkaufmancom-gets-a-new-look/">Liamkaufman.com gets a new look</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2009/03/18/pyItunes-a-python-itunes-library-parser/">pyItunes, a Python iTunes Library Parser</a>
       </li>
     
   </ul>
