@@ -1,0 +1,158 @@
+---
+layout: post
+title: Integrating Backbone Boilerplate with Rails 3
+comments: true
+---
+
+<p>
+Despite making several small Backbone.js apps in the past year, Backbone.js had never really clicked with me. I wasn't crazy about having to spend time thinking about file and folder organizing for JavaScript and template files. I was also unsure how all the pieces would fit together. Thanks to Tim Branyen's <a href="http://tbranyen.github.com/backbone-boilerplate/">Backbone Boilerplate</a> those issues have been significantly reduced. According to Backbone Boilerplate's documentation: "This boilerplate is the product of much research and frustration. Existing boilerplates freely modify Backbone core, lack a build process, and are very prescriptive; this boilerplate changes that."
+</p>
+<p>
+While I was excited to use Backbone Boilerplate, it wasn't immediately clear how I'd integrate it with Rails 3. After several hours of tinkering I came up with an approach that places the build product of your backbone app in the <code>lib/assets</code> folder. This approach means that the application can be integrated into the assets pipeline and easily deployed to heroku.
+
+<p>
+<a class="github" href="https://github.com/liamks/Rails-Backbone-boilerplate"><span></span>Code on Github</a>
+</p>
+
+<h2> Creating the Rails App</h2>
+
+```bash Getting Started
+// create a new rails app
+rails new rails-bb
+cd rails-bb/lib
+
+//remove the index file
+rm -r public/index.html
+
+cd lib
+git clone https://github.com/tbranyen/backbone-boilerplate.git
+cd backbone-boilerplate
+
+//switch to the amd branch
+git checkout amd
+rm -rf .git
+```
+<h2> Changing Build Settings </h2>
+<p>
+In biolerplate's config.js file modify the following to:
+</p>
+
+```javascript line 49 - lib/backbone-boilerplate/build/config.js
+concat: {
+  "dist/debug/require.js": [
+    "assets/js/libs/almond.js",
+    "dist/debug/templates.js",
+    "dist/debug/require.js"
+  ],
+
+  "../assets/javascripts/require-app.js": [
+    "assets/js/libs/almond.js",
+    "dist/debug/templates.js",
+    "dist/debug/require.js"
+  ]
+},
+```
+```javascript line 67 - lib/backbone-boilerplate/build/config.js
+mincss: {
+  "dist/release/index.css": [
+    "assets/css/style.css"
+  ],
+
+  "../assets/stylesheets/index.css": [
+    "assets/css/style.css"
+  ]
+},
+```
+
+<h2> Creating a Rails Layout and Controller </h2>
+<p>
+To build the app, go to <code>lib/backbone-boilerplate</code> and run <code>node build default mincss</code>. The build script will create <code>lib/assets/javascripts/require-app.js</code> that includes both the backbone-boilerplate application and the template files. In next step create a rails layout file <code>app/views/layouts/bbapp.html.erb</code> with the following content:
+</p>
+
+```html bbapp.html.erb
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>RailsBb</title>
+  <%= stylesheet_link_tag    "application", :media => "all" %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+
+  <!-- Main container -->
+  <div role="main" id="main"></div>
+
+  <!-- Application source -->
+  <%= javascript_include_tag "bbapp", "data-main" => "app/index" %>
+
+</body>
+</html>
+```
+
+<p>
+To plug the backbone app into the asset pipeline create <code>assets/javascript/bbapp.js</code> with the following contents:
+</p>
+
+```javascript bbapp.js
+//
+//= require require-app
+```
+<p>
+Now we need to let rails know that it needs to compile bbapp.js for production. To do this open <code>config/environments/production.rb</code> and after <code>config.assets.compile = false</code> add:  
+</p>
+
+```ruby config\environments\production.rb
+config.assets.precompile += %w( bbapp.js )
+```
+
+<p>
+To test that this works, we'll create a controller that has a single action that uses the <code>bbapp.html.erb</code> layout. From the root of the rails-bb application:
+</p>
+
+```bash
+rails generate controller BackBoneBoilerplate app
+```
+
+<p>
+Go to the controller that was just created: <code>back_bone_boilerplate_controller.rb</code> and specify the layout:
+</p>
+
+```ruby app/controllers/back_bone_boilerplate_controller.rb
+class BackBoneBoilerplateController < ApplicationController
+
+  layout 'bbapp'
+  
+  def app
+  end
+end
+```
+
+<h2> Final Steps </h2>
+<p>
+In <code>config/routes.rb</code> a root route is added to point to the controller actiona associated with the backbone app: <code>root :to => 'back_bone_boilerplate#app'</code> At this point we're nearly done. Unfortunately to get the backbone.png to load I changed the src attribute, of the img tag on line 2, in <code>lib/backbone-boilerplate/templates/example.html</code> to <code>src="/assets/backbone.png"</code> and then from <code>lib/backbone-boilerplate</code>:
+</p>
+
+```bash
+cp assets/img/backbone.png ../app/assets/images/backbone.png
+
+\\recompile
+node build default mincss
+
+cd ..
+rails server
+```
+
+<p>
+If all went well, when you go to http://0.0.0.0:3000 you should see:
+</p>
+<p>
+<img src="/images/backbone-boilerplate.png">
+</p>
+
+<p>
+While the above approach works, it was laborious and requires rebuilding the application with each change. Watching for changes with <code>node build watch</code> would certainly help. I think the advantage of this approach is that in development you can debug the JavaScript, while in production the javascript is minified and goes through the asset pipeline like any other JavaScript file in a Rails app.
+</p>
