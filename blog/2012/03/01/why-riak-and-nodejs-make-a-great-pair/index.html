@@ -1,0 +1,420 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Why Riak and Node.js Make a Great Pair - Liam Kaufman</title>
+  <meta name="author" content="Liam Kaufman">
+
+  
+  <meta name="description" content="In the last few years there has been a proliferation of noSQL databases. Searching on Google for site:news.ycombinator.com nosql yields over 2,500 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liamkaufman.com/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair">
+
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="alternate" title="Liam Kaufman" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1004776-5']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+ 
+  <h1><a href="/">Liam Kaufman</a></h1>
+  
+    <h2>Software Developer and Entrepreneur</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liamkaufman.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/projects.html">Projects</a></li>
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Why Riak and Node.js Make a Great Pair</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-01T00:00:00-05:00" pubdate data-updated="true">Mar 1<span>st</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>
+In the last few years there has been a proliferation of noSQL databases. Searching on Google for <code>site:news.ycombinator.com nosql</code> yields over 2,500 hits, many of which include include posts asking when you&#8217;d want to use a noSQL database. If you&#8217;re used to a relational database it might seem like an unnecessary burden to learn another database paradigm, but there&#8217;s one open source noSQL database that I think is not only worth the burden, but is a perfect fit for Node.js development: <a href=”http://wiki.basho.com/What-is-Riak%3F.html”>Riak (pronounced &#8220;REE-ack&#8221;)</a>. 
+</p>
+
+<h2>Why is Riak a Good Fit with JavaScript and Node.js?</h2>
+
+<p>
+<a href="http://riakjs.org/">Riak-js</a> makes storing JavaScript objects easy. There is no need to <code>JSON.stringify()</code> a JavaScript object when saving it, or applying <code>JSON.parse()</code> when retrieving. 
+</p>
+
+<figure class='code'><figcaption><span>Riak and Node.js Basics</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;riak-js&#39;</span><span class="p">).</span><span class="nx">getClient</span><span class="p">();</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">post</span> <span class="o">=</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="mi">17</span><span class="p">,</span>
+</span><span class='line'>            <span class="nx">date</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
+</span><span class='line'>            <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;a blog post&#39;</span><span class="p">,</span>
+</span><span class='line'>            <span class="nx">body</span><span class="o">:</span> <span class="s1">&#39;A blog post about Riak&#39;</span><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="nx">post</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">post</span><span class="p">);</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">meta</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="cm">/* prints</span>
+</span><span class='line'><span class="cm">{ id: 17,</span>
+</span><span class='line'><span class="cm">  date: &#39;2012-02-29T18:26:44.400Z&#39;,</span>
+</span><span class='line'><span class="cm">  title: &#39;a blog post&#39;,</span>
+</span><span class='line'><span class="cm">  body: &#39;A blog post about Riak&#39; }</span>
+</span><span class='line'><span class="cm">*/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+In the above example, a riak-js client is created and a post object is created. The post object is saved into the &#8216;posts&#8217; bucket, with its id as its key. To retrieve the post, the bucket and key are referenced. 
+</p>
+
+<p>
+Using JavaScript in the client, and the server are nice, and being able to easily save JavaScript objects is even better. Not having to switch between languages would certainly reduce annoying syntactic problems. This would also allow you to write the entire stack in JavaScript, CoffeeScript or ClojureScript, giving you several programming paradigms to choose from.  
+</p>
+
+<p>
+If you decided to use <A href="http://andyet.net/blog/2011/feb/15/re-using-backbonejs-models-on-the-server-with-node/">Backbone.js on the server</a>, calling <code>toJSON()</code> on a Backbone model would allow you to easily store the model in the Riak. 
+</p>
+
+<h2>Why Riak?</h2>
+
+<p>
+At this point you might be wondering why you’d want to use Riak when CouchDB also has a JavaScript interface and can do some of the above. As Damien Katz, the creator of CouchDB has pointed out, <a href="http://damienkatz.net/2012/01/why_couchbase.html">CouchDB is slow and can&#8217;t &#8220;scale-out on it&#8217;s own&#8221;</a>.  In contrast, Riak was built for replication and scaling out. In fact, people at Basho, the company behind Riak, <a href="http://lists.basho.com/pipermail/riak-users_lists.basho.com/2010-April/000876.html">indicate that adding new nodes actually increases throughput</a>.
+</p>
+
+<h2>Additional Features of Riak</h2>
+<p>
+Saving JavaScript objects and easy scaling are both good fits with node.js but Riak has some additional features, such as buckets and links, that make retrieval convenient. With buckets the following functions become possible:
+</p>
+
+<figure class='code'><figcaption><span>Riak Buckets</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// Get all the posts within the posts bucket</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">getAll</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Get all the posts with the title ===  &#39;a blog post&#39; </span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">getAlll</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">where</span><span class="o">:</span> <span class="p">{</span><span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;a blog post&#39;</span> <span class="p">}});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Get the number of posts</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">count</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+Another interesting property of Riak, is it’s concepts of links. A link establishes a &#8220;one-way relationships between objects in Riak&#8221;.  For instance, say we wanted to link similar posts the following would do:
+</p>
+
+<figure class='code'><figcaption><span>Riak Links</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">aNewPost</span> <span class="o">=</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="mi">18</span><span class="p">,</span>
+</span><span class='line'>                <span class="nx">date</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
+</span><span class='line'>                <span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;a second blog post&#39;</span><span class="p">,</span>
+</span><span class='line'>                <span class="nx">body</span><span class="o">:</span> <span class="s1">&#39;blog post about Riak part 2&#39;</span><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Save the second post, with a link to the first post</span>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="nx">aNewPost</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">aNewPost</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">{</span> <span class="nx">links</span><span class="o">:</span> <span class="p">[</span> <span class="p">{</span><span class="nx">bucket</span><span class="o">:</span> <span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="o">:</span> <span class="mi">17</span> <span class="p">}</span> <span class="p">]});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">db</span><span class="p">.</span><span class="nx">walk</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="s1">&#39;18&#39;</span><span class="p">,</span> <span class="p">[{</span><span class="nx">bucket</span><span class="o">:</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span><span class="nx">tag</span><span class="o">:</span><span class="s1">&#39;_&#39;</span><span class="p">}]);</span>
+</span><span class='line'><span class="c1">// db.walk, traverses object 18&#39;s links, </span>
+</span><span class='line'><span class="c1">// which happens to be post 17, and returns them.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>Conclusions</h2>
+
+<p>
+While the above assessment is pretty rosey, Riak shouldn’t be the only database in your toolbox. Redis’ pub/sub and sorted sets are unmatched in Riak. If you’re running <a href="http://labs.linkfluence.net/nosql/2011/03/07/moving_from_couchdb_to_riak.html">map/reduce over large datasets, you’re likely better off using Hadoop</a>. Conversely if your already well-versed in SQL, and your data is relational, using Postgresql is probably a better fit. Despite those caveats being able to easily scale your database, and save JavaScript objects, is a pretty compelling reason to use Riak with Node.js
+</p>
+
+<h2>Further Riak and Node.js Reading</h2>
+<ul>
+<li><a href="http://www.slideshare.net/seancribbs/riak-with-nodejs">Riak with Node.js</a></li>
+<li><a href="http://blogs.digitar.com/jjww/2011/03/riak-vs-couchdb-for-storing-100000-coupons/">Riak vs Couchdb for storing 100000 Coupons</a></li>
+<li><a href="http://labs.linkfluence.net/nosql/2011/03/07/moving_from_couchdb_to_riak.html">Moving from Couchdb to Riak</a></li>
+<li><a href="http://siculars.posterous.com/paginating-with-riak">Pagination with Riak</a></li>
+</ul></div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Liam Kaufman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-01T00:00:00-05:00" pubdate data-updated="true">Mar 1<span>st</span>, 2012</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/02/25/adding_real-time_to_rails_with_socket.IO_nodejs_and_backbonejs_with_demo/" title="Previous Post: Adding Real-Time To Rails With Socket.IO, Node.js and Backbone.js (With Demo)">&laquo; Adding Real-Time To Rails With Socket.IO, Node.js and Backbone.js (With Demo)</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  <div class='social'>
+
+  <a id="twitter" href="https://twitter.com/liamkaufman"><span></span>@liamkaufman</a>
+  <a id="github" href="https://github.com/liamks"><span></span>@liamks</a>
+  <a id="linked-in" href="http://www.linkedin.com/pub/liam-kaufman/1b/7b4/2a4"><span></span>Liam Kaufman</a> 
+</div>
+
+
+  <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/">Why Riak and Node.js Make a Great Pair</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/02/25/adding_real-time_to_rails_with_socket.IO_nodejs_and_backbonejs_with_demo/">Adding Real-Time To Rails With Socket.IO, Node.js and Backbone.js (With Demo)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/02/18/integrating-backbone-boilerplate-with-rails3/">Integrating Backbone Boilerplate with Rails 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/02/11/12-pushing-files-to-the-browser-using-deliveryjs-socketio-and-nodejs/">Pushing Files to the Browser Using Delivery.js, Socket.IO and Node.js</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/">Testing Socket.IO with Mocha, Should.js and Socket.IO Client</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("liamkaufman", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <p>Follow <a href="http://twitter.com/liamkaufman">@liamkaufman</a></p>
+  
+</section>
+
+
+
+
+
+
+
+
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Liam Kaufman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/';
+        var disqus_url = 'http://liamkaufman.com/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
