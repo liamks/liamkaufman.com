@@ -1,0 +1,101 @@
+---
+layout: post
+title: Why Riak and Node.js Make a Great Pair
+comments: true
+---
+
+<p>
+In the last few years there has been a proliferation of noSQL databases. Searching on Google for <code>site:news.ycombinator.com nosql</code> yields over 2,500 hits, many of which include include posts asking when you'd want to use a noSQL database. If you're used to a relational database it might seem like an unnecessary burden to learn another database paradigm, but there's one open source noSQL database that I think is not only worth the burden, but is a perfect fit for Node.js development: <a href=”http://wiki.basho.com/What-is-Riak%3F.html”>Riak (pronounced "REE-ack")</a>. 
+</p>
+
+<h2>Why is Riak a Good Fit with JavaScript and Node.js?</h2>
+
+<p>
+<a href="http://riakjs.org/">Riak-js</a> makes storing JavaScript objects easy. There is no need to <code>JSON.stringify()</code> a JavaScript object when saving it, or applying <code>JSON.parse()</code> when retrieving. 
+</p>
+
+```javascript Riak and Node.js Basics
+var db = require('riak-js').getClient();
+var post = {id: 17, 
+            date: new Date(),
+            title: 'a blog post', 
+            body: 'A blog post about Riak'};
+
+db.save('posts', post.id, post);
+db.get('posts', 17, function(err, data, meta){
+    console.log(data);
+});
+/* prints
+{ id: 17,
+  date: '2012-02-29T18:26:44.400Z',
+  title: 'a blog post',
+  body: 'A blog post about Riak' }
+*/
+```
+
+<p>
+In the above example, a riak-js client is created and a post object is created. The post object is saved into the 'posts' bucket, with its id as its key. To retrieve the post, the bucket and key are referenced. 
+</p>
+
+<p>
+Using JavaScript in the client, and the server are nice, and being able to easily save JavaScript objects is even better. Not having to switch between languages would certainly reduce annoying syntactic problems. This would also allow you to write the entire stack in JavaScript, CoffeeScript or ClojureScript, giving you several programming paradigms to choose from.  
+</p>
+
+<p>
+If you decided to use <A href="http://andyet.net/blog/2011/feb/15/re-using-backbonejs-models-on-the-server-with-node/">Backbone.js on the server</a>, calling <code>toJSON()</code> on a Backbone model would allow you to easily store the model in the Riak. 
+</p>
+
+<h2>Why Riak?</h2>
+
+<p>
+At this point you might be wondering why you’d want to use Riak when CouchDB also has a JavaScript interface and can do some of the above. As Damien Katz, the creator of CouchDB has pointed out, <a href="http://damienkatz.net/2012/01/why_couchbase.html">CouchDB is slow and can't "scale-out on it's own"</a>.  In contrast, Riak was built for replication and scaling out. In fact, people at Basho, the company behind Riak, <a href="http://lists.basho.com/pipermail/riak-users_lists.basho.com/2010-April/000876.html">indicate that adding new nodes actually increases throughput</a>.
+</p>
+
+<h2>Additional Features of Riak</h2>
+<p>
+Saving JavaScript objects and easy scaling are both good fits with node.js but Riak has some additional features, such as buckets and links, that make retrieval convenient. With buckets the following functions become possible:
+</p>
+
+```javascript Riak Buckets
+// Get all the posts within the posts bucket
+db.getAll('posts');
+
+// Get all the posts with the title ===  'a blog post' 
+db.getAlll('posts', { where: {title: 'a blog post' }});
+
+// Get the number of posts
+db.count('posts');
+```
+
+<p>
+Another interesting property of Riak, is it’s concepts of links. A link establishes a "one-way relationships between objects in Riak".  For instance, say we wanted to link similar posts the following would do:
+</p>
+
+```javascript Riak Links
+var aNewPost = {id: 18, 
+                date: new Date(),
+                title: 'a second blog post', 
+                body: 'blog post about Riak part 2'};
+
+// Save the second post, with a link to the first post
+db.save('posts', aNewPost.id, aNewPost, 
+  { links: [ {bucket: 'posts', 'key': 17 } ]});
+
+db.walk('posts', '18', [{bucket:'posts',tag:'_'}]);
+// db.walk, traverses object 18's links, 
+// which happens to be post 17, and returns them.
+```
+
+<h2>Conclusions</h2>
+
+<p>
+While the above assessment is pretty rosey, Riak shouldn’t be the only database in your toolbox. Redis’ pub/sub and sorted sets are unmatched in Riak. If you’re running <a href="http://labs.linkfluence.net/nosql/2011/03/07/moving_from_couchdb_to_riak.html">map/reduce over large datasets, you’re likely better off using Hadoop</a>. Conversely if your already well-versed in SQL, and your data is relational, using Postgresql is probably a better fit. Despite those caveats being able to easily scale your database, and save JavaScript objects, is a pretty compelling reason to use Riak with Node.js
+</p>
+
+<h2>Further Riak and Node.js Reading</h2>
+<ul>
+<li><a href="http://www.slideshare.net/seancribbs/riak-with-nodejs">Riak with Node.js</a></li>
+<li><a href="http://blogs.digitar.com/jjww/2011/03/riak-vs-couchdb-for-storing-100000-coupons/">Riak vs Couchdb for storing 100000 Coupons</a></li>
+<li><a href="http://labs.linkfluence.net/nosql/2011/03/07/moving_from_couchdb_to_riak.html">Moving from Couchdb to Riak</a></li>
+<li><a href="http://siculars.posterous.com/paginating-with-riak">Pagination with Riak</a></li>
+</ul>
