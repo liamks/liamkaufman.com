@@ -1,0 +1,93 @@
+---
+layout: post
+title: Scraping Web Pages with jQuery, Node.js and Jsdom
+comments: true
+---
+
+<p>
+I always found it odd that accessing DOM elements with Ruby, or Python, wasn't as easy as it was with jQuery. Many HTML parsing libraries employ Simple API for XML (SAX) that can handle extremely large XML documents, but is cumbersome and adds complexity. Other parsing libraries use XML Path Language (XPath), which is conceptually simpler than SAX, but still more of an effort than jQuery. I was pleasantly surprised to discover that it's possible to use jQuery to parse web pages with Node.js. This is accomplished by using <a href="https://github.com/tmpvar/jsdom">jsdom, "a javascript implementation of the W3C DOM"</a>.
+</p>
+
+<h2>jQuery and jsdom</h2>
+<p>
+Using jsdom you can specify a local file, or url, and jsdom will return the <code>window</code> object for that document. Additionally, JavaScript can be inserted into the document; in our case we're inserting the jQuery library. In the example below all the links from the Hacker News front page are logged to the console.
+</p>
+
+```javascript Scraping Links From Hacker News
+var jsdom  = require('jsdom');
+var fs     = require('fs');
+var jquery = fs.readFileSync("./jquery-1.7.1.min.js").toString();
+
+jsdom.env({
+  html: 'http://news.ycombinator.com/',
+  src: [
+    jquery
+  ],
+  done: function(errors, window) {
+    var $ = window.$;
+    $('a').each(function(){
+      console.log( $(this).attr('href') );
+    });
+  }
+});
+```
+
+<h2>Making Scraping More Robust</h2>
+<p>
+  Unfortunately there are few common bugs that I ran into when scraping content with jQuery and jsdom. Specifically there are two issues, that aren't necessarily specific to jsdom, that are worth watching out for. 
+</p>
+
+<h3>jQuery Return Values</h3>
+<p>
+  The first issue are return values from jQuery function calls. Extra attention has to be paid to return values. Applying a method to <code>undefined</code> will crash a program, a problem that can be especially apparent in DOM parsing. Consider the example below:
+</p>
+
+```javascript
+$($('a')[7]).attr('href').split('/')
+```
+<p>
+  If there are 8, or more, links on a page the 8th link will be returned and its href attribute will be split into an array. However, if there are less than 8 the <code>attr('href')</code> will return <code>undefined</code> and calling <code>split()</code> on it will crash the program. Since HTML pages aren't as structured as API responses, its important not to assume too much and always check return values.
+</p>
+
+<h3>Web Page Errors</h3>
+<p>
+  It's entirely possible that the url passed to jsdom returns an error. If the error is temporary, your scraper might miss out on important information. This issue can be mitigated by recursively retrying the url, like the example below:
+</p>
+
+```javascript Managing Errors
+var getLinks = function(retries){
+
+  if(retries === 3){
+    return;
+  }else if (retries === undefined){
+    retries = 0;
+  }
+
+  jsdom.env({
+    html: 'http://news.ycombinator.com/',
+    src: [
+      jquery
+    ],
+    done: function(errors, window) {
+
+      if(errors){
+        return getLinks(retries + 1);
+      }
+
+      var $ = window.$;
+      $('a').each(function(){
+        console.log( $(this).attr('href') );
+      });
+    }
+  });
+}
+```
+
+<p>
+With the above approach, if errors are encountered <code>getLinks</code> will be called recursively with a larger <code>retries</code> value. On the 3rd retry the function will return. If you wanted to go further you could wrap the recursive call in <code>setTimeout</code> to ensure that the recursive web request was not made immediately after the error was encountered.
+</p>
+
+<h2>Conclusions</h2>
+<p>
+  Parsing web pages with jQuery on the server is a much more natural experience for developers already accustomed to using jQuery in the client. However, prior to scraping it's worth checking if the site 1) allows scraping and 2) does not already have an API. Consuming a JSON API would be even easy than scraping and parsing!
+</p>
