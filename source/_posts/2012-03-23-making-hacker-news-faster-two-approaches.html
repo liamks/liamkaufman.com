@@ -1,0 +1,109 @@
+---
+layout: post
+title: "Making Hacker News Faster: Two Approaches"
+comments: true
+---
+
+<p>
+Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)</a>, "a social news website about computer hacking and startup companies" <a href="http://en.wikipedia.org/wiki/Hacker_News">(Wikipedia)</a>, has grown consistently, with an <a href=”http://www.ycombinator.com/images/hntraffic-5mar12.png”>average of 150,000 daily uniques</a>. The growth in traffic may explain why load times seem increasingly variable. I couldn’t help but wonder if some optimizations could be made to decrease both variability and load times. I'll propose two broad approaches, the first involves migrating away from table based layouts while the second involves consuming a JSON API.
+</p>
+
+<h2> Approach 1: Tables to Divs </h2>
+
+<div class="table">
+  <h2> Table 1. Hacker News Resource Statistics </h2>
+  <table>
+    <tr>
+      <th>Resource</th>
+      <th>Size (With Tables) </th>
+      <th>Size (With Divs) </th>
+      <th>% Change </th>
+    </tr>
+    <tr>
+      <td>HTML</td>
+      <td>26KB</td>
+      <td>15KB</td>
+      <td>-42%</td>
+    </tr>
+    <tr>
+      <td>CSS</td>
+      <td>1.7KB</td>
+      <td>2.3KB</td>
+      <td>+35%</td>
+    </tr>
+    <tr>
+      <td>Logo</td>
+      <td>100B</td>
+      <td>0</td>
+      <td>-100%</td>
+    </tr>
+    <tr>
+      <td>Up Arrow</td>
+      <td>111B</td>
+      <td>0</td>
+      <td>-100%</td>
+    </tr>
+    <tr>
+      <td>Total</td>
+      <td>27.9KB</td>
+      <td>17.3KB</td>
+      <td>-37.2%</td>
+    </tr>
+  </table>
+  <p>
+    In the DIV version, the logo and up arrow were base 64 encoded and included in the HTML and CSS files. 
+  </p>
+</div>
+
+<p>
+  HN's front page is comprised of: 4 tables, 98 rows, 159 columns, 37 inline style declarations and numerous attributes that dictate style. To reduce the markup on the front page I created a new HN front page (<a href="https://github.com/liamks/Making-HN-Faster/blob/master/HackerNewsV2.html">Github link</a>) that looks identical to the existing page but does not include tables or inline css. I also went a step further and base64 encoded both the logo and the up arrow to decrease the number of requests. The completed CSS file was run through a <a href="http://www.minifycss.com/css-compressor/">css minifyer</a> to yield further reductions. With those changes only two requests are necessary, one for the HTML file and one for the CSS file. Table 1 shows that those changes yielded an overall reduction of 37%.
+</p>
+
+<p>
+  I also slightly modified the JavaScript responsible for sending up-votes to the server. Instead of grabbing a vote's id from the id of the HTML node, it gets it from the 'data-id' attribute. Otherwise, the JavaScript remains identical. As an aside, if you have not examined the JavaScript that is responsible for sending votes to the server, I've included it below (the existing code). It's a creative use of an image tag. An image node is created, but not added to the DOM. When the image node is assigned a 'src', which happens to include all the vote info, it then requests the 'image', using the constructed url. Thus the 'image' request becomes analogous to an AJAX GET request, but without a conventional response.
+</p>
+
+```javascript Votes With IMG Nodes
+function byId(id) {
+  return document.getElementById(id);
+}
+
+function vote(node) {
+  var v = node.id.split(/_/);   // {'up', '123'}
+  var item = v[1]; 
+
+  // hide arrows
+  byId('up_'   + item).style.visibility = 'hidden';
+  byId('down_' + item).style.visibility = 'hidden';
+
+  // ping server
+  var ping = new Image();
+  ping.src = node.href;
+
+  return false; // cancel browser nav
+} 
+```
+
+<h2> Approach 2: JSON API </h2>
+<p>
+  Although approach 1 results in a 37% decrease in data transferred to the client, markup and data must be transferred to the client on every refresh. In approach two, the markup is only transferred to the client once, and then cached, while the data is sent the client via JSON. Using this approach would decrease the HTML file but no doubt increase the JavaScript file. However, both of those resources could be cached in browser, and cached on a CDN, drastically reducing the number of requests to HN's server. Furthermore, the JSON representing the stories on the front page <a href="https://github.com/liamks/Making-HN-Faster/blob/master/frontpage.json">is 7.8KB</a>, much smaller than the amount size of the existing solution or even approach 1.
+</p>
+
+<p>
+  Approach 2 is not without its drawbacks. It would require significant changes in both HN's backend and large changes to the client-side. A JavaScript application and API would have to be created. This approach would likely be incompatible with bots that would not execute the JavaScript necessary to populate the page with stories. To get around this the agent-type could be detected and a static version could be served to bots. Alternatively, the webpage could be pre-populated with stories and subsequent requests would take advantage of AJAX get requests. This would simplify matters, but make caching more difficult, since the cache page would require updating every time the front page changes.
+</p>
+
+<h2> Conlusions </h2>
+<p>
+  By transitioning from tables to divs, and inline css to external css, HN could dramatically reduce the bandwidth required to serve its web pages. The first approach would require minimal changes to HN's back-end making it a good candidate for adoption. While the second approach could yield even better results, it would require drastic changes to both the server and the client, making it more suitable as a long term solution.
+</p>
+<p>
+  In addition to the two approaches above, gzip compressing both the .html and the .css would further reduce transferred data. It would also be beneficial to add the appropriate headers to enable browser caching for CSS.
+</p>
+<p>
+  While Paul Graham may have insufficient time, or interests, in implementing some of the above changes, I suspect he knows a few individuals who would be willing to help out.
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/Making-HN-Faster"><span></span>Code on Github</a>
+</p>

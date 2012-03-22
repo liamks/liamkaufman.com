@@ -146,3 +146,30 @@ a.github{
     text-decoration: none;
     padding: 4px 6px;
 }
+
+.table{
+  h2{
+    font-size: 120%;
+
+  }
+  table{
+    width: 100%;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    margin-bottom: 10px;
+  }
+
+  th{
+    border-bottom: 2px solid #000;
+    padding: 2px;
+  }
+
+  td{
+    padding: 2px;
+  }
+
+  p{
+    font-size: 90%;
+    color: #444;
+  }
+}
