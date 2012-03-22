@@ -1,0 +1,413 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Making Hacker News Faster: Two Approaches - Liam Kaufman</title>
+  <meta name="author" content="Liam Kaufman">
+
+  
+  <meta name="description" content="Over the years traffic to Hacker News (HN), &#8220;a social news website about computer hacking and startup companies&#8221; (Wikipedia), has grown &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liamkaufman.com/blog/2012/03/23/making-hacker-news-faster-two-approaches">
+
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="alternate" title="Liam Kaufman" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1004776-5']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+ 
+  <h1><a href="/">Liam Kaufman</a></h1>
+  
+    <h2>Software Developer and Entrepreneur</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liamkaufman.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/projects.html">Projects</a></li>
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Making Hacker News Faster: Two Approaches</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-23T00:00:00-04:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>
+Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)</a>, &#8220;a social news website about computer hacking and startup companies&#8221; <a href="http://en.wikipedia.org/wiki/Hacker_News">(Wikipedia)</a>, has grown consistently, with an <a href=”http://www.ycombinator.com/images/hntraffic-5mar12.png”>average of 150,000 daily uniques</a>. The growth in traffic may explain why load times seem increasingly variable. I couldn’t help but wonder if some optimizations could be made to decrease both variability and load times. I&#8217;ll propose two broad approaches, the first involves migrating away from table based layouts while the second involves consuming a JSON API.
+</p>
+
+<h2> Approach 1: Tables to Divs </h2>
+
+<div class="table">
+  <h2> Table 1. Hacker News Resource Statistics </h2>
+  <table>
+    <tr>
+      <th>Resource</th>
+      <th>Size (With Tables) </th>
+      <th>Size (With Divs) </th>
+      <th>% Change </th>
+    </tr>
+    <tr>
+      <td>HTML</td>
+      <td>26KB</td>
+      <td>15KB</td>
+      <td>-42%</td>
+    </tr>
+    <tr>
+      <td>CSS</td>
+      <td>1.7KB</td>
+      <td>2.3KB</td>
+      <td>+35%</td>
+    </tr>
+    <tr>
+      <td>Logo</td>
+      <td>100B</td>
+      <td>0</td>
+      <td>-100%</td>
+    </tr>
+    <tr>
+      <td>Up Arrow</td>
+      <td>111B</td>
+      <td>0</td>
+      <td>-100%</td>
+    </tr>
+    <tr>
+      <td>Total</td>
+      <td>27.9KB</td>
+      <td>17.3KB</td>
+      <td>-37.2%</td>
+    </tr>
+  </table>
+  <p>
+    In the DIV version, the logo and up arrow were base 64 encoded and included in the HTML and CSS files. 
+  </p>
+</div>
+
+<p>
+  HN&#8217;s front page is comprised of: 4 tables, 98 rows, 159 columns, 37 inline style declarations and numerous attributes that dictate style. To reduce the markup on the front page I created a new HN front page (<a href="https://github.com/liamks/Making-HN-Faster/blob/master/HackerNewsV2.html">Github link</a>) that looks identical to the existing page but does not include tables or inline css. I also went a step further and base64 encoded both the logo and the up arrow to decrease the number of requests. The completed CSS file was run through a <a href="http://www.minifycss.com/css-compressor/">css minifyer</a> to yield further reductions. With those changes only two requests are necessary, one for the HTML file and one for the CSS file. Table 1 shows that those changes yielded an overall reduction of 37%.
+</p>
+
+<p>
+  I also slightly modified the JavaScript responsible for sending up-votes to the server. Instead of grabbing a vote&#8217;s id from the id of the HTML node, it gets it from the &#8216;data-id&#8217; attribute. Otherwise, the JavaScript remains identical. As an aside, if you have not examined the JavaScript that is responsible for sending votes to the server, I&#8217;ve included it below (the existing code). It&#8217;s a creative use of an image tag. An image node is created, but not added to the DOM. When the image node is assigned a &#8216;src&#8217;, which happens to include all the vote info, it then requests the &#8216;image&#8217;, using the constructed url. Thus the &#8216;image&#8217; request becomes analogous to an AJAX GET request, but without a conventional response.
+</p>
+
+<figure class='code'><figcaption><span>Votes With IMG Nodes</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">byId</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">vote</span><span class="p">(</span><span class="nx">node</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="sr">/_/</span><span class="p">);</span>   <span class="c1">// {&#39;up&#39;, &#39;123&#39;}</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">item</span> <span class="o">=</span> <span class="nx">v</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// hide arrows</span>
+</span><span class='line'>  <span class="nx">byId</span><span class="p">(</span><span class="s1">&#39;up_&#39;</span>   <span class="o">+</span> <span class="nx">item</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span> <span class="o">=</span> <span class="s1">&#39;hidden&#39;</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">byId</span><span class="p">(</span><span class="s1">&#39;down_&#39;</span> <span class="o">+</span> <span class="nx">item</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span> <span class="o">=</span> <span class="s1">&#39;hidden&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// ping server</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">ping</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Image</span><span class="p">();</span>
+</span><span class='line'>  <span class="nx">ping</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">href</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span> <span class="c1">// cancel browser nav</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2> Approach 2: JSON API </h2>
+<p>
+  Although approach 1 results in a 37% decrease in data transferred to the client, markup and data must be transferred to the client on every refresh. In approach two, the markup is only transferred to the client once, and then cached, while the data is sent the client via JSON. Using this approach would decrease the HTML file but no doubt increase the JavaScript file. However, both of those resources could be cached in browser, and cached on a CDN, drastically reducing the number of requests to HN&#8217;s server. Furthermore, the JSON representing the stories on the front page <a href="https://github.com/liamks/Making-HN-Faster/blob/master/frontpage.json">is 7.8KB</a>, much smaller than the amount size of the existing solution or even approach 1.
+</p>
+
+<p>
+  Approach 2 is not without its drawbacks. It would require significant changes in both HN&#8217;s backend and large changes to the client-side. A JavaScript application and API would have to be created. This approach would likely be incompatible with bots that would not execute the JavaScript necessary to populate the page with stories. To get around this the agent-type could be detected and a static version could be served to bots. Alternatively, the webpage could be pre-populated with stories and subsequent requests would take advantage of AJAX get requests. This would simplify matters, but make caching more difficult, since the cache page would require updating every time the front page changes.
+</p>
+
+<h2> Conlusions </h2>
+<p>
+  By transitioning from tables to divs, and inline css to external css, HN could dramatically reduce the bandwidth required to serve its web pages. The first approach would require minimal changes to HN&#8217;s back-end making it a good candidate for adoption. While the second approach could yield even better results, it would require drastic changes to both the server and the client, making it more suitable as a long term solution.
+</p>
+<p>
+  In addition to the two approaches above, gzip compressing both the .html and the .css would further reduce transferred data. It would also be beneficial to add the appropriate headers to enable browser caching for CSS.
+</p>
+<p>
+  While Paul Graham may have insufficient time, or interests, in implementing some of the above changes, I suspect he knows a few individuals who would be willing to help out.
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/Making-HN-Faster"><span></span>Code on Github</a>
+</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Liam Kaufman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-23T00:00:00-04:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2012</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2012/03/23/making-hacker-news-faster-two-approaches/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2012/03/23/making-hacker-news-faster-two-approaches/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/03/08/scraping-web-pages-with-jquery-nodejs-and-jsdom/" title="Previous Post: Scraping Web Pages with jQuery, Node.js and Jsdom">&laquo; Scraping Web Pages with jQuery, Node.js and Jsdom</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  <div class='social'>
+
+  <a id="twitter" href="https://twitter.com/liamkaufman"><span></span>@liamkaufman</a>
+  <a id="github" href="https://github.com/liamks"><span></span>@liamks</a>
+  <a id="linked-in" href="http://www.linkedin.com/pub/liam-kaufman/1b/7b4/2a4"><span></span>Liam Kaufman</a> 
+</div>
+
+
+  <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/03/23/making-hacker-news-faster-two-approaches/">Making Hacker News Faster: Two Approaches</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/03/08/scraping-web-pages-with-jquery-nodejs-and-jsdom/">Scraping Web Pages with jQuery, Node.js and Jsdom</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/">Why Riak and Node.js Make a Great Pair</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/02/25/adding_real-time_to_rails_with_socket.IO_nodejs_and_backbonejs_with_demo/">Adding Real-Time To Rails With Socket.IO, Node.js and Backbone.js (With Demo)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/02/18/integrating-backbone-boilerplate-with-rails3/">Integrating Backbone Boilerplate with Rails 3</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("liamkaufman", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <p>Follow <a href="http://twitter.com/liamkaufman">@liamkaufman</a></p>
+  
+</section>
+
+
+
+
+
+
+
+
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Liam Kaufman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2012/03/23/making-hacker-news-faster-two-approaches/';
+        var disqus_url = 'http://liamkaufman.com/blog/2012/03/23/making-hacker-news-faster-two-approaches/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

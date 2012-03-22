@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="I always found it odd that accessing DOM elements with Ruby, or Python, wasn&#8217;t as easy as it was with jQuery. Many HTML parsing libraries &hellip;">
+  <meta name="description" content="Over the years traffic to Hacker News (HN), &#8220;a social news website about computer hacking and startup companies&#8221; (Wikipedia), has grown &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,161 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/03/23/making-hacker-news-faster-two-approaches/">Making Hacker News Faster: Two Approaches</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-23T00:00:00-04:00" pubdate data-updated="true">Mar 23<span>rd</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)</a>, &#8220;a social news website about computer hacking and startup companies&#8221; <a href="http://en.wikipedia.org/wiki/Hacker_News">(Wikipedia)</a>, has grown consistently, with an <a href=”http://www.ycombinator.com/images/hntraffic-5mar12.png”>average of 150,000 daily uniques</a>. The growth in traffic may explain why load times seem increasingly variable. I couldn’t help but wonder if some optimizations could be made to decrease both variability and load times. I&#8217;ll propose two broad approaches, the first involves migrating away from table based layouts while the second involves consuming a JSON API.
+</p>
+
+<h2> Approach 1: Tables to Divs </h2>
+
+<div class="table">
+  <h2> Table 1. Hacker News Resource Statistics </h2>
+  <table>
+    <tr>
+      <th>Resource</th>
+      <th>Size (With Tables) </th>
+      <th>Size (With Divs) </th>
+      <th>% Change </th>
+    </tr>
+    <tr>
+      <td>HTML</td>
+      <td>26KB</td>
+      <td>15KB</td>
+      <td>-42%</td>
+    </tr>
+    <tr>
+      <td>CSS</td>
+      <td>1.7KB</td>
+      <td>2.3KB</td>
+      <td>+35%</td>
+    </tr>
+    <tr>
+      <td>Logo</td>
+      <td>100B</td>
+      <td>0</td>
+      <td>-100%</td>
+    </tr>
+    <tr>
+      <td>Up Arrow</td>
+      <td>111B</td>
+      <td>0</td>
+      <td>-100%</td>
+    </tr>
+    <tr>
+      <td>Total</td>
+      <td>27.9KB</td>
+      <td>17.3KB</td>
+      <td>-37.2%</td>
+    </tr>
+  </table>
+  <p>
+    In the DIV version, the logo and up arrow were base 64 encoded and included in the HTML and CSS files. 
+  </p>
+</div>
+
+<p>
+  HN&#8217;s front page is comprised of: 4 tables, 98 rows, 159 columns, 37 inline style declarations and numerous attributes that dictate style. To reduce the markup on the front page I created a new HN front page (<a href="https://github.com/liamks/Making-HN-Faster/blob/master/HackerNewsV2.html">Github link</a>) that looks identical to the existing page but does not include tables or inline css. I also went a step further and base64 encoded both the logo and the up arrow to decrease the number of requests. The completed CSS file was run through a <a href="http://www.minifycss.com/css-compressor/">css minifyer</a> to yield further reductions. With those changes only two requests are necessary, one for the HTML file and one for the CSS file. Table 1 shows that those changes yielded an overall reduction of 37%.
+</p>
+
+<p>
+  I also slightly modified the JavaScript responsible for sending up-votes to the server. Instead of grabbing a vote&#8217;s id from the id of the HTML node, it gets it from the &#8216;data-id&#8217; attribute. Otherwise, the JavaScript remains identical. As an aside, if you have not examined the JavaScript that is responsible for sending votes to the server, I&#8217;ve included it below (the existing code). It&#8217;s a creative use of an image tag. An image node is created, but not added to the DOM. When the image node is assigned a &#8216;src&#8217;, which happens to include all the vote info, it then requests the &#8216;image&#8217;, using the constructed url. Thus the &#8216;image&#8217; request becomes analogous to an AJAX GET request, but without a conventional response.
+</p>
+
+<figure class='code'><figcaption><span>Votes With IMG Nodes</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">byId</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">vote</span><span class="p">(</span><span class="nx">node</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="sr">/_/</span><span class="p">);</span>   <span class="c1">// {&#39;up&#39;, &#39;123&#39;}</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">item</span> <span class="o">=</span> <span class="nx">v</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// hide arrows</span>
+</span><span class='line'>  <span class="nx">byId</span><span class="p">(</span><span class="s1">&#39;up_&#39;</span>   <span class="o">+</span> <span class="nx">item</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span> <span class="o">=</span> <span class="s1">&#39;hidden&#39;</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">byId</span><span class="p">(</span><span class="s1">&#39;down_&#39;</span> <span class="o">+</span> <span class="nx">item</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span> <span class="o">=</span> <span class="s1">&#39;hidden&#39;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// ping server</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">ping</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Image</span><span class="p">();</span>
+</span><span class='line'>  <span class="nx">ping</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">href</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span> <span class="c1">// cancel browser nav</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2> Approach 2: JSON API </h2>
+<p>
+  Although approach 1 results in a 37% decrease in data transferred to the client, markup and data must be transferred to the client on every refresh. In approach two, the markup is only transferred to the client once, and then cached, while the data is sent the client via JSON. Using this approach would decrease the HTML file but no doubt increase the JavaScript file. However, both of those resources could be cached in browser, and cached on a CDN, drastically reducing the number of requests to HN&#8217;s server. Furthermore, the JSON representing the stories on the front page <a href="https://github.com/liamks/Making-HN-Faster/blob/master/frontpage.json">is 7.8KB</a>, much smaller than the amount size of the existing solution or even approach 1.
+</p>
+
+<p>
+  Approach 2 is not without its drawbacks. It would require significant changes in both HN&#8217;s backend and large changes to the client-side. A JavaScript application and API would have to be created. This approach would likely be incompatible with bots that would not execute the JavaScript necessary to populate the page with stories. To get around this the agent-type could be detected and a static version could be served to bots. Alternatively, the webpage could be pre-populated with stories and subsequent requests would take advantage of AJAX get requests. This would simplify matters, but make caching more difficult, since the cache page would require updating every time the front page changes.
+</p>
+
+<h2> Conlusions </h2>
+<p>
+  By transitioning from tables to divs, and inline css to external css, HN could dramatically reduce the bandwidth required to serve its web pages. The first approach would require minimal changes to HN&#8217;s back-end making it a good candidate for adoption. While the second approach could yield even better results, it would require drastic changes to both the server and the client, making it more suitable as a long term solution.
+</p>
+<p>
+  In addition to the two approaches above, gzip compressing both the .html and the .css would further reduce transferred data. It would also be beneficial to add the appropriate headers to enable browser caching for CSS.
+</p>
+<p>
+  While Paul Graham may have insufficient time, or interests, in implementing some of the above changes, I suspect he knows a few individuals who would be willing to help out.
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/Making-HN-Faster"><span></span>Code on Github</a>
+</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1795,62 +1950,9 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/03/18/pyItunes-a-python-itunes-library-parser/">pyItunes, a Python iTunes Library Parser</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-03-18T00:00:00-04:00" pubdate data-updated="true">Mar 18<span>th</span>, 2009</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-	In an effort to add some personality to this site I thought I&#8217;d list my favourite songs. iTunes provides
-	a mechanism for users to rate songs, by giving a song 0 to 5 stars. After years of listening to music, and rating it,
-	I have a large collection of rated songs. Manually copying and pasting each song into an HTML file seemed
-	 inefficient and time consuming, enter Python.
-</p>
-
-<p>
-	In an effort to learn Python, and parse my iTunes library, I created pyItunes, a Python module. pyItunes includes three classes that can parse the &#8220;iTunes Music Library.xml&#8221; file and convert it into list of Song objects. I decided to roll my own micro-xml parser that can only parse the iTunes xml file. Although, reinventing the wheel, especially an XML parser, is likely a horrible idea I felt it would be a good learning experience. In future versions I may swap an existing XML parser that is much faster and more efficient than the one I created.
-</p>
-
-<p>
-	<h4>Download pyItunes</h4>
-	<script src="http://gist.github.com/80911.js"></script>
-</p>
-
-<p>
-	<h4>pyItunes Usage</h4>
-	<script src="http://gist.github.com/79668.js"></script>
-
-</p></div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
+    
+      <a class="prev" href="/blog/page/2/">&larr; Older</a>
     
     <a href="/blog/archives">Blog Archives</a>
     
@@ -1870,6 +1972,10 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/03/23/making-hacker-news-faster-two-approaches/">Making Hacker News Faster: Two Approaches</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/03/08/scraping-web-pages-with-jquery-nodejs-and-jsdom/">Scraping Web Pages with jQuery, Node.js and Jsdom</a>
       </li>
     
@@ -1883,10 +1989,6 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
     
       <li class="post">
         <a href="/blog/2012/02/18/integrating-backbone-boilerplate-with-rails3/">Integrating Backbone Boilerplate with Rails 3</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/02/11/12-pushing-files-to-the-browser-using-deliveryjs-socketio-and-nodejs/">Pushing Files to the Browser Using Delivery.js, Socket.IO and Node.js</a>
       </li>
     
   </ul>
