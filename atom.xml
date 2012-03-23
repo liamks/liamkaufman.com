@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2012-03-22T13:57:07-04:00</updated>
+  <updated>2012-03-23T14:27:54-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Making Hacker News Faster: Two Approaches]]></title>
-    <link href="http://liamkaufman.com/blog/2012/03/23/making-hacker-news-faster-two-approaches/"/>
-    <updated>2012-03-23T00:00:00-04:00</updated>
-    <id>http://liamkaufman.com/blog/2012/03/23/making-hacker-news-faster-two-approaches</id>
+    <link href="http://liamkaufman.com/blog/2012/03/22/making-hacker-news-faster-two-approaches/"/>
+    <updated>2012-03-22T00:00:00-04:00</updated>
+    <id>http://liamkaufman.com/blog/2012/03/22/making-hacker-news-faster-two-approaches</id>
     <content type="html"><![CDATA[<p>
 Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)</a>, &#8220;a social news website about computer hacking and startup companies&#8221; <a href="http://en.wikipedia.org/wiki/Hacker_News">(Wikipedia)</a>, has grown consistently, with an <a href=”http://www.ycombinator.com/images/hntraffic-5mar12.png”>average of 150,000 daily uniques</a>. The growth in traffic may explain why load times seem increasingly variable. I couldn’t help but wonder if some optimizations could be made to decrease both variability and load times. I&#8217;ll propose two broad approaches, the first involves migrating away from table based layouts while the second involves consuming a JSON API.
 </p>
@@ -139,6 +139,54 @@ Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)
 <a class="github" href="https://github.com/liamks/Making-HN-Faster"><span></span>Code on Github</a>
 </p>
 ]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[From Digg to Reddit to Hacker News: What's Next?]]></title>
+    <link href="http://liamkaufman.com/blog/2012/03/22/from-digg-to-reddit-to-hacker-news-whats-next/"/>
+    <updated>2012-03-22T00:00:00-04:00</updated>
+    <id>http://liamkaufman.com/blog/2012/03/22/from-digg-to-reddit-to-hacker-news-whats-next</id>
+    <content type="html"><![CDATA[<p>
+Dustin Curtis, the creator of <a href="http://svbtle.com/">Svbtle</a>, recently mentioned on <a href="https://twitter.com/#!/dcurtis/status/182986897444966402">Twitter</a>:
+</p>
+<blockquote>
+I miss the Hacker News from four years ago. It was awesome. The discussions there are not even worth reading anymore. It&#8217;s sad.
+</blockquote>
+<p>
+ Based on the number of retweets and favorites, I suspect that others agree. In fact the idea that Hacker News is degrading is common enough that it has been addressed on <a href="http://ycombinator.com/newsguidelines.html">HN’s guidelines</a>: 
+</p>
+<blockquote>
+ If your account is less than a year old, please don&#8217;t submit comments saying that HN is turning into Reddit. (It&#8217;s a common semi-noob illusion.).
+</blockquote>
+<p>
+  However, Mr Curtis has been on HN for <a href="http://news.ycombinator.com/user?id=dcurtis">over five years</a>, and is certainly not subject to the &#8216;common semi-noob illusion&#8217;. Is HN getting worse then?
+</p>
+
+<p>
+I suspect that when HN started only those that were most passionate about hacking were familiar with HN and would take the time to comment on it. As time went on the popularity of both Y Combinator and HN may have resulted in the level of discourse regressing to the mean. That&#8217;s not to say that there aren&#8217;t still intelligent comments, in fact I&#8217;d argue that there are more intelligent comments than there were 4 or 5 years ago. However, people tend to remember the unintelligent comments more, especially when those comments contain opinions that differ from their own or originate from non-experts.
+</p>
+
+<p>
+If Digg, Reddit and Hacker News are no longer the best places for discussion how can we create a place that is? While there ought to be many ways to encourage scholarly discussion, and discourage idiotic comments, I want to explore several ideas.
+</p>
+
+<h2>Exclusivity</h2>
+<p>
+In the early stages Digg, Reddit and Hacker News were implicitly exclusive. They didn’t discourage people from joining, but their initial lack of popularity acted as a filter to those who were technically savvy and within certain social networks. Once the exclusivity vanished the communities became diluted. <a href="http://forrst.com">Forrst</a> is explicitly exclusive and is by invitation only. Does Forrst&#8217;s exclusivity lead to a stronger community? To reiterate, is exclusivity a necessity in keeping a social news site strong and viable?
+</p>
+<h2>Experts</h2>
+<p>
+I enjoy when an article pops up on HN about physics or biology and several graduate students in those fields provide intelligent comments. Is there a way to officially denote that someone is an expert in a field and automatically give their comments more weight? In very esoteric subjects it isn&#8217;t necessary, the complexity of the subject reduces &#8220;average&#8221; comments. However, in simpler subjects, <a href="http://en.wikipedia.org/wiki/Parkinson's_Law_of_Triviality">bikeshedding</a> becomes an issue. Could bikeshedding be prevented by weighting comments based on the user&#8217;s past comments? For instance, if an individual has been voted up when discussing physics, perhaps future comments on physics should be algorithmically voted up.
+</p>
+
+<h2>Focus</h2>
+<p>
+One thing I really appreciate about HN is the variety of content. However, I can’t help but wonder if a social news site restricted the content to just a specific topic if that would both decrease the probability that the content, and discussion, become watered down? Forrst focuses on design and development, has their focus helped them? Reddit has addressed this issue with subreddits, but the result seems to be many hardly used subreddits. I think focus is important, but at the same time I like being exposed to new topics, can the those two wishes be balanced?
+</p>
+<h2>Conclusions</h2>
+<p>
+There is no magic bullet for maintaining the quality of a social news site, but there are a collection of concepts that may help. It would be interesting to A/B test some of those ideas. One could imagine creating several social news websites for different topics and making some exclusive and some not, or altering other variables and see which succeed. What do you think is important in a social news site?
+</p>]]></content>
   </entry>
   
   <entry>
