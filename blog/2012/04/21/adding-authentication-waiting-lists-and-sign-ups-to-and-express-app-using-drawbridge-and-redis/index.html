@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Liamkaufman.com gets a new look - Liam Kaufman</title>
+  <title>Adding Authentication, Waiting Lists and Sign Ups to an Express App Using Drawbridge.js and Redis - Liam Kaufman</title>
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="After 3 years without change, I&#8217;ve redone my personal website using Jekyll and Bootstrap. The previous version of liamkaufman.com was hosted &hellip;">
+  <meta name="description" content="There are several popular modules for adding password authenticate to an Express app. Unfortunately, they require creating lots of boilerplate code &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look">
+  <link rel="canonical" href="http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis">
 
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -82,7 +82,7 @@
   
   <header>
     
-      <h1 class="entry-title">Liamkaufman.com Gets a New Look</h1>
+      <h1 class="entry-title">Adding Authentication, Waiting Lists and Sign Ups to an Express App Using Drawbridge.js and Redis</h1>
     
     
       <p class="meta">
@@ -98,7 +98,7 @@
   
 
 
-<time datetime="2011-08-23T00:00:00-04:00" pubdate data-updated="true">Aug 23<span>rd</span>, 2011</time>
+<time datetime="2012-04-21T00:00:00-04:00" pubdate data-updated="true">Apr 21<span>st</span>, 2012</time>
         
       </p>
     
@@ -106,10 +106,40 @@
 
 
 <div class="entry-content"><p>
-After 3 years without change, I&#8217;ve redone my personal website using Jekyll and Bootstrap. The previous version of liamkaufman.com was hosted on Google App Engine and consisted of a very basic CMS that I made before I knew what I was doing. I was both unhappy with the look of the site, and the code behind it. At the same time I was interested in using Jekyll, as I wanted to avoid the hassles associated with database backed sites. I also appreciate the fact that my site, and it’s content are easy to deploy and update via Github. 
+There are several popular modules for adding password authenticate to an Express app. Unfortunately, they require creating lots of boilerplate code and views. Given the ubiquity of authentication I prefer the approach that authentication libraries like Devise take: they generate code and views, and you’re free to modify or delete what’s created. The advantage of that approach is it takes a few minutes to add authentication to an application. Given the options for Express I set about to create an authentication module that would make adding authentication extremely quick and easy. However, I also wanted the module to handle sign ups (the type you see on a just-launched startup’s page) and to handle waiting lists and invitations. Thus, I created Drawbridge.js.
+</p>
+
+<h2>Redis for Persistence</h2>
+<p>
+Drawbridge.js uses Redis to persists its data, but it’s possible for developers to create other database adapters for Drawbridge (pull-requests accepted). Drawbridge sends emails using either nodemailer, or the postmark modules. Likewise developers are free to add additional email adapters.
+</p>
+
+<h2>Drawbridge Screencast</h2>
+<p>
+I’ve created a short screencast to show how easy it is to add drawbridge to an existing application. Before you watch the screencast it’s important that I outline a couple of caveats:
 </p>
 <p>
-Overall the process of learning Jekyll and Bootstrap was much easier than anticipated. To learn Jekyll I examined the <a href="https://github.com/schacon/schacon.github.com">source code</a> behind <a href="http://schacon.github.com/">Scott Chacon’s blog</a>. Learning Bootstrap consisted of referencing CSS classes in my DOM and referencing the Bootstrap CSS file itself: not much to it.
+  <ol>
+    <li>Drawbridge is not ready for production - it’s basically a working prototype.</li>
+    <li>Drawbridge views and variables are inconsistently named, that will need to be fixed.</li>
+    <li>The code needs refactoring and testing.</li>
+    <li>Drawbridge needs to be picked apart for security issues.</li>
+  </ol>
+</p>
+<p>
+With those caveats out of the way here is the video:
+</p>
+
+<p>
+<iframe src="http://player.vimeo.com/video/40780990?title=0&amp;byline=0&amp;portrait=0" width="400" height="300" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe><p><a href="http://vimeo.com/40780990">Drawbridge.js</a> from <a href="http://vimeo.com/user11381617">Liam Kaufman</a> on <a href="http://vimeo.com">Vimeo</a>.</p>
+</p>
+
+<p>
+While I plan on refactoring Drawbridge&#8217;s source code, I first wanted to get feedback from the community and see if there’s any interest before I invest too much time. If you’re interested in Drawbridge watch the project on Github and try and get it working on your toy Express apps. I welcome feedback on both the architecture of Drawbridge and its security.
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/Drawbridge.js"><span></span>Drawbridge.js on Github</a>
 </p></div>
 
 
@@ -132,7 +162,7 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
   
 
 
-<time datetime="2011-08-23T00:00:00-04:00" pubdate data-updated="true">Aug 23<span>rd</span>, 2011</time>
+<time datetime="2012-04-21T00:00:00-04:00" pubdate data-updated="true">Apr 21<span>st</span>, 2012</time>
       
 
 
@@ -142,7 +172,7 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
   <a href="http://news.ycombinator.com/submit" class="hn-share-button">Vote on HN</a>
 
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -155,10 +185,8 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2009/03/18/pyItunes-a-python-itunes-library-parser/" title="Previous Post: pyItunes, a Python iTunes Library Parser">&laquo; pyItunes, a Python iTunes Library Parser</a>
+        <a class="basic-alignment left" href="/blog/2012/03/22/making-hacker-news-faster-two-approaches/" title="Previous Post: Making Hacker News Faster: Two Approaches">&laquo; Making Hacker News Faster: Two Approaches</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript/" title="next Post: What is the best way of Mastering JavaScript?">What is the best way of Mastering JavaScript? &raquo;</a>
       
     </p>
   </footer>
@@ -250,8 +278,8 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/';
-        var disqus_url = 'http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/';
+        var disqus_identifier = 'http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/';
+        var disqus_url = 'http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/';
         var disqus_script = 'embed.js';
       
     (function () {
@@ -305,8 +333,8 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/';
-        var disqus_url = 'http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/';
+        var disqus_identifier = 'http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/';
+        var disqus_url = 'http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/';
         var disqus_script = 'embed.js';
       
     (function () {

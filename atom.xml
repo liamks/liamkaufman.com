@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2012-03-23T14:27:54-04:00</updated>
+  <updated>2012-04-21T14:46:41-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -12,6 +12,49 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Adding Authentication, Waiting Lists and Sign Ups to an Express App Using Drawbridge.js and Redis]]></title>
+    <link href="http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/"/>
+    <updated>2012-04-21T00:00:00-04:00</updated>
+    <id>http://liamkaufman.com/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis</id>
+    <content type="html"><![CDATA[<p>
+There are several popular modules for adding password authenticate to an Express app. Unfortunately, they require creating lots of boilerplate code and views. Given the ubiquity of authentication I prefer the approach that authentication libraries like Devise take: they generate code and views, and you’re free to modify or delete what’s created. The advantage of that approach is it takes a few minutes to add authentication to an application. Given the options for Express I set about to create an authentication module that would make adding authentication extremely quick and easy. However, I also wanted the module to handle sign ups (the type you see on a just-launched startup’s page) and to handle waiting lists and invitations. Thus, I created Drawbridge.js.
+</p>
+
+<h2>Redis for Persistence</h2>
+<p>
+Drawbridge.js uses Redis to persists its data, but it’s possible for developers to create other database adapters for Drawbridge (pull-requests accepted). Drawbridge sends emails using either nodemailer, or the postmark modules. Likewise developers are free to add additional email adapters.
+</p>
+
+<h2>Drawbridge Screencast</h2>
+<p>
+I’ve created a short screencast to show how easy it is to add drawbridge to an existing application. Before you watch the screencast it’s important that I outline a couple of caveats:
+</p>
+<p>
+  <ol>
+    <li>Drawbridge is not ready for production - it’s basically a working prototype.</li>
+    <li>Drawbridge views and variables are inconsistently named, that will need to be fixed.</li>
+    <li>The code needs refactoring and testing.</li>
+    <li>Drawbridge needs to be picked apart for security issues.</li>
+  </ol>
+</p>
+<p>
+With those caveats out of the way here is the video:
+</p>
+
+<p>
+<iframe src="http://player.vimeo.com/video/40780990?title=0&amp;byline=0&amp;portrait=0" width="400" height="300" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe><p><a href="http://vimeo.com/40780990">Drawbridge.js</a> from <a href="http://vimeo.com/user11381617">Liam Kaufman</a> on <a href="http://vimeo.com">Vimeo</a>.</p>
+</p>
+
+<p>
+While I plan on refactoring Drawbridge&#8217;s source code, I first wanted to get feedback from the community and see if there’s any interest before I invest too much time. If you’re interested in Drawbridge watch the project on Github and try and get it working on your toy Express apps. I welcome feedback on both the architecture of Drawbridge and its security.
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/Drawbridge.js"><span></span>Drawbridge.js on Github</a>
+</p>]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Making Hacker News Faster: Two Approaches]]></title>
