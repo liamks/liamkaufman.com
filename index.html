@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="There are several popular modules for adding password authenticate to an Express app. Unfortunately, they require creating lots of boilerplate code &hellip;">
+  <meta name="description" content="There are several popular modules for adding password-based user authentication to an Express.js app. Unfortunately, they require writing lots of &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -109,23 +109,30 @@
 
 
   <div class="entry-content"><p>
-There are several popular modules for adding password authenticate to an Express app. Unfortunately, they require creating lots of boilerplate code and views. Given the ubiquity of authentication I prefer the approach that authentication libraries like Devise take: they generate code and views, and you’re free to modify or delete what’s created. The advantage of that approach is it takes a few minutes to add authentication to an application. Given the options for Express I set about to create an authentication module that would make adding authentication extremely quick and easy. However, I also wanted the module to handle sign ups (the type you see on a just-launched startup’s page) and to handle waiting lists and invitations. Thus, I created Drawbridge.js.
+There are several popular modules for adding password-based user authentication to an Express.js app. Unfortunately, they require writing lots of code to get started. I prefer the approach that authentication libraries like Devise take: they generate code and views, and you’re free to modify, or delete, what’s created. 
 </p>
 
-<h2>Redis for Persistence</h2>
 <p>
-Drawbridge.js uses Redis to persists its data, but it’s possible for developers to create other database adapters for Drawbridge (pull-requests accepted). Drawbridge sends emails using either nodemailer, or the postmark modules. Likewise developers are free to add additional email adapters.
+Given the authentication options for Express.js I wanted to create a module that would make adding user authentication quick and easy. Moreover, I also wanted developers to be free to edit and modify the generated views. In addition to authentication I wanted the module to handle sign ups (the type you see on a just-launched startup’s page) and to handle waiting lists and invitations. Based on the module&#8217;s functionality I&#8217;ve decided to call it Drawbridge.js.
+</p>
+
+<h2>User Authentication with Drawbridge.js</h2>
+<p>
+Drawbridge.js uses Redis to persists its data, but it’s possible for developers to create other database adapters for Drawbridge (pull-requests accepted). I chose Redis because its ability to pipeline multiple commands reducing round trips between the server and the database. The atomic nature of pipelined commands obviates a lot of complex callbacks and makes the resulting code much easier to understand. Overall Redis is easy to use, easy to understand and fast - great features for an authentication module. 
+</p>
+<p>
+To send email, Drawbridge uses either nodemailer, or the postmark modules. I included the <a href="https://postmarkapp.com">Postmark</a> option because I&#8217;m currently using it and I like it. However, developers are free to add additional email adapters.
 </p>
 
 <h2>Drawbridge Screencast</h2>
 <p>
-I’ve created a short screencast to show how easy it is to add drawbridge to an existing application. Before you watch the screencast it’s important that I outline a couple of caveats:
+I’ve created a short screencast to show how easy it is to add drawbridge to an existing Express.js application. Before you watch the screencast it’s important that I outline a couple of caveats:
 </p>
 <p>
   <ol>
     <li>Drawbridge is not ready for production - it’s basically a working prototype.</li>
     <li>Drawbridge views and variables are inconsistently named, that will need to be fixed.</li>
-    <li>The code needs refactoring and testing.</li>
+    <li>The code needs refactoring and more testing.</li>
     <li>Drawbridge needs to be picked apart for security issues.</li>
   </ol>
 </p>
@@ -138,7 +145,7 @@ With those caveats out of the way here is the video:
 </p>
 
 <p>
-While I plan on refactoring Drawbridge&#8217;s source code, I first wanted to get feedback from the community and see if there’s any interest before I invest too much time. If you’re interested in Drawbridge watch the project on Github and try and get it working on your toy Express apps. I welcome feedback on both the architecture of Drawbridge and its security.
+While I built Drawbridge.js to scratch my own itch, I hope others will find it useful as well. Once I refine it further I will most certainly start to use it in my own projects. If you’re interested in Drawbridge 1) watch the project on Github and 2) try and get it working on your toy Express apps. I welcome feedback on both the architecture of Drawbridge and its security.
 </p>
 
 <p>
