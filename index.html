@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="There are several popular modules for adding password-based user authentication to an Express.js app. Unfortunately, they require writing lots of &hellip;">
+  <meta name="description" content="Using the right tool for the job is a basic tenant amongst programmers. However, with all the currently available database options it&#8217;s &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,200 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/06/04/redis-and-relational-data/">Redis and Relational Data</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-06-04T00:00:00-04:00" pubdate data-updated="true">Jun 4<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+  Using the right tool for the job is a basic tenant amongst programmers. However, with all the currently available database options it&#8217;s increasingly difficult to figure out what the right tool is. Sometime it&#8217;s nice to have a very simple tool that can be used for many different tasks: Redis. Over the last 4 months I&#8217;ve been using Redis heavily and I&#8217;ve even started to use it for relational data. I&#8217;ve been curious to find out the performance differences between Redis and PostgreSQL. Below I&#8217;ll provide an example of storing a simple relational dataset in Redis, and I&#8217;ll look at the performance differences between Redis and PostgreSQL.
+</p>
+
+<h2>Why use Redis for Relational data?</h2>
+<p>
+  I find Redis appealing because it&#8217;s the simplest database that I have ever used (relative to: MySQL, PostgreSQL, Riak &amp; Mongo). The documentation includes the time complexity of each command, and the documentation provides an interactive console to experiment with a given command. There&#8217;s also a certain appeal to using a single database instead of 2 or 3: 
+  <ol>
+    <li>It&#8217;s much quicker to master 1 database than 2.</li>
+    <li>Two different databases means twice the updates, bugs and crashes.</li>
+  </ol>
+</p>
+
+<p>
+  I&#8217;ll outline a few ways Redis can be used to store relational data and the performance differences between redis and PostgreSQL. All the examples and performance tests were done using Node.js.
+</p>
+
+<h2>Storing Relational Data in Redis</h2>
+
+<p>
+  Redis values can be 1 of 5 different datatypes: strings, hashes, lists, sets and sorted sets. Each row in a relational database can be represented using a hash, and a list, set or sorted set can be used to represent a table. The datatype that&#8217;s used to represent the table is dependent on how the data needs to be retrieved.
+</p>
+
+<p>
+  For example, let&#8217;s say we&#8217;re storing blog posts. In Redis, each post will be stored in its own hash, with its key corresponding to the post&#8217;s url:
+</p>
+
+<figure class='code'><figcaption><span>A Post</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s1">&#39;a-post-about-databases&#39;</span> <span class="o">:</span>
+</span><span class='line'>  <span class="p">{</span> <span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;A post about databases&#39;</span><span class="p">,</span> <span class="nx">body</span> <span class="o">:</span> <span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="nx">createdAt</span> <span class="o">:</span> <span class="mi">1338751532301</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  Retrieving a single post using the url becomes O(N), where N is the size of the hash (post). Since the number of keys in a post is constant, retrieving that post becomes O(1). However, if we wanted to get all the posts, or a subset of them, it becomes useful to also store the keys in a sorted set (e.g. the &#8220;table&#8221;). Using a sorted set means that posts can be stored by their createdAt date and it allows us to retrieve all the posts, or a subset of them (useful for pagination).
+</p>
+
+
+<figure class='code'><figcaption><span>Retrieving a subset of all posts</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">redis</span><span class="p">.</span><span class="nx">zrange</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">posts</span><span class="p">){</span>
+</span><span class='line'>  <span class="c1">//return the keys (urls) associated with the first 11 posts</span>
+</span><span class='line'><span class="p">})</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">startDate</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="nx">getTime</span><span class="p">()</span> <span class="p">;</span> <span class="c1">// June 1st</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">endDate</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">30</span><span class="p">)).</span><span class="nx">getTime</span><span class="p">();</span> <span class="c1">// June 30th</span>
+</span><span class='line'><span class="nx">redis</span><span class="p">.</span><span class="nx">zrangebyscore</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="nx">startDate</span><span class="p">,</span> <span class="nx">endDate</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">posts</span><span class="p">){</span>
+</span><span class='line'>  <span class="c1">//returns the keys (urls) associated with all the posts from June 2012</span>
+</span><span class='line'><span class="p">})</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  The above example is relatively straight forward, but what about storing the post&#8217;s comments? For every post we create a new sorted set called: &#8216;comments-KEYofPOST&#8217;. The comments are sorted by their creation time. To get a post, and its comments, we could do the following:
+</p>
+
+<figure class='code'><figcaption><span>Storing a post&#8217;s comments</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">postURL</span> <span class="o">=</span> <span class="s1">&#39;a-post-about-databases&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">multi</span> <span class="o">=</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">multi</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// queue up the queries</span>
+</span><span class='line'><span class="nx">multi</span><span class="p">.</span><span class="nx">hgetall</span><span class="p">(</span><span class="nx">postURL</span><span class="p">);</span>
+</span><span class='line'><span class="nx">multi</span><span class="p">.</span><span class="nx">zrange</span><span class="p">(</span><span class="s1">&#39;comments-&#39;</span> <span class="o">+</span> <span class="nx">postURL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// execute the queries atomically</span>
+</span><span class='line'><span class="nx">multi</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">results</span><span class="p">){</span>
+</span><span class='line'>  <span class="cm">/*</span>
+</span><span class='line'><span class="cm">  results[0] will contain the post</span>
+</span><span class='line'><span class="cm">  results[1] will contain an array with all the comments</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>Redis vs. PostgreSQL Performance</h2>
+
+<p>
+  In SQL you might do 1 query to get the post and another to get the comments, or use a join to get the post and the comments in one query. With the approach above, using Redis, 2 queries are atomically executed, using the multi and exec commands. Both in PostgreSQL, and Redis, a single request is sent the database to retrieve 1 post and its 10 comments.
+</p>
+
+<p>
+  To test the the performance I created a dataset that includes 10,000 &#8216;blog posts&#8217;, with each post having 10 comments (100,000 comments in total). All tests were run on a 2011 Macbook Pro (2.3 GHz i7, 8GB RAM). To test PostgreSQL, I sequentially fetched each post and used a join to retrieve its comments (10,000 separate queries). The test was repeated six times to produce an average time and was done for both PostgreSQL and Redis.
+</p>
+
+<div class="table">
+  <h2>Redis &amp; PostgreSQL Performance</h2>
+  <table>
+    <tr>
+      <th></th>
+      <th>Average Time (Seconds)</th>
+      <th>Query (Milliseconds)</th>
+    </tr>
+
+    <tr>
+      <td>psql</td>
+      <td>138.34</td>
+      <td>13.8</td>
+    </tr>
+
+    <tr>
+      <td>psql (Native Bindings)</td>
+      <td>125.95</td>
+      <td>12.6</td>
+    </tr>
+
+    <tr>
+      <td>Redis (Hires)</td>
+      <td>0.76</td>
+      <td>0.067</td>
+    </tr>
+
+  </table>
+</div>
+
+<p>
+  Using PostgreSQL, it took an average of 138.34 seconds to execute all 10,000 queries, or 13.8 milliseconds/query. Using the native bindings, that come with the psql node module, yielded an improvement and was associated with 12.6 millisecons/query. In contrast, Redis can retrieve a post and its comments in 0.067 milliseconds. Of course the above is akin to comparing apples to oranges, but it still provides a glimpse into the performance differences between Redis and PostgreSQL.
+</p>
+<p>
+  While Redis is in memory and should be fast, PostgreSQL uses caching algorithms (<a href="http://archives.postgresql.org/pgsql-hackers/2007-11/msg00562.php">LRU</a>) to keep its contents in memory. Of course, keeping everything in memory (Redis) will most likely be faster than using LRU.
+</p>
+
+<h2>Caveats to using Redis for Relational Data</h2>
+
+<p>
+  The single biggest caveat to using Redis, is that it is entirely in memory. If your relational dataset is 2.5GB (not that large), you&#8217;ll need a $160/month Linode (4GB RAM) to keep it in Redis. In contrast, a $20/month Linode (512MB RAM) has 20GB of disk space and could easily hold that same dataset using PostgreSQL. This tradeoff becomes even more of an issue as your dataset become larger than 4GB. 
+</p>
+
+<p>
+  The above example only represents a very simple relationship between two pieces of data (posts and comments), mapping a many-to-many relationship in Redis would take a little more imagination. 
+</p>
+
+<h2>Conclusions</h2>
+<p>
+  Before storing all your app&#8217;s data in Redis it&#8217;s advisable to estimate how large your dataset will be in a year, or two, and how much much RAM will be required to use Redis. If your dataset will be greater than 4GB in a year, and money is a constraint, it probably makes sense to put all, or a portion of the data, in PostgreSQL, or use an alternative noSQL solution (e.g. Riak or Mongo).
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/Redis-and-Relational-Data"><span></span>Code on Github</a>
+</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1902,105 +2096,6 @@ Trouble Shooting
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks/">Examples I Want to See in JavaScript Frameworks.</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-12-13T00:00:00-05:00" pubdate data-updated="true">Dec 13<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-  With the public release of <a href="http://emberjs.com">ember.js</a>,
-  I excitedly poured over the examples hoping to find a framework that 
-  would make Creating, Reading, Updating and Deleting (CRUD) easier. When
-  push comes to shove, the vast majority of apps that I&#8217;ve worked on
-  involve CRUD. 
-</p>
-
-<p>
-  I want to see the following (excuse the pseudo code):<br />
-<figure class='code'><figcaption><span>Model</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">model</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">validation</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">m</span><span class="p">){...}</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Controller</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">controller</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">show</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">index</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">new</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">create</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="p">...</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Form</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&#39;&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;text&#39;</span> <span class="na">name=</span><span class="s">&#39;firstName&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;submit&#39;</span> <span class="na">value=</span><span class="s">&#39;submit&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'><span class="nt">&lt;/form&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-</p>
-
-<p>
-  Will your framework help me 1) write less code, 2) get things done
-  faster and 3) with less errors? Show me.
-</p>
-<p>
-  PS: I don&#8217;t want to diminish the tremendous effort it takes to create
-  a framework and release it, but please go the extra mile and provide
-  some concrete CRUD examples for a single class!
-</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -2023,6 +2118,10 @@ Trouble Shooting
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/06/04/redis-and-relational-data/">Redis and Relational Data</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/">Adding Authentication, Waiting Lists and Sign Ups to an Express App Using Drawbridge.js and Redis</a>
       </li>
     
@@ -2036,10 +2135,6 @@ Trouble Shooting
     
       <li class="post">
         <a href="/blog/2012/03/08/scraping-web-pages-with-jquery-nodejs-and-jsdom/">Scraping Web Pages with jQuery, Node.js and Jsdom</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/">Why Riak and Node.js Make a Great Pair</a>
       </li>
     
   </ul>
