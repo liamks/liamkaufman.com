@@ -1,0 +1,144 @@
+---
+layout: post
+title: "Redis and Relational Data"
+date: 2012-06-04
+comments: true
+---
+
+<p>
+  Using the right tool for the job is a basic tenant amongst programmers. However, with all the currently available database options it's increasingly difficult to figure out what the right tool is. Sometime it's nice to have a very simple tool that can be used for many different tasks: Redis. Over the last 4 months I've been using Redis heavily and I've even started to use it for relational data. I've been curious to find out the performance differences between Redis and PostgreSQL. Below I'll provide an example of storing a simple relational dataset in Redis, and I'll look at the performance differences between Redis and PostgreSQL.
+</p>
+
+<h2>Why use Redis for Relational data?</h2>
+<p>
+  I find Redis appealing because it's the simplest database that I have ever used (relative to: MySQL, PostgreSQL, Riak &amp; Mongo). The documentation includes the time complexity of each command, and the documentation provides an interactive console to experiment with a given command. There's also a certain appeal to using a single database instead of 2 or 3: 
+  <ol>
+    <li>It's much quicker to master 1 database than 2.</li>
+    <li>Two different databases means twice the updates, bugs and crashes.</li>
+  </ol>
+</p>
+
+<p>
+  I'll outline a few ways Redis can be used to store relational data and the performance differences between redis and PostgreSQL. All the examples and performance tests were done using Node.js.
+</p>
+
+<h2>Storing Relational Data in Redis</h2>
+
+<p>
+  Redis values can be 1 of 5 different datatypes: strings, hashes, lists, sets and sorted sets. Each row in a relational database can be represented using a hash, and a list, set or sorted set can be used to represent a table. The datatype that's used to represent the table is dependent on how the data needs to be retrieved.
+</p>
+
+<p>
+  For example, let's say we're storing blog posts. In Redis, each post will be stored in its own hash, with its key corresponding to the post's url:
+</p>
+
+```javascript A Post
+'a-post-about-databases' : 
+  { title : 'A post about databases', body : '...', createdAt : 1338751532301}
+```
+
+<p>
+  Retrieving a single post using the url becomes O(N), where N is the size of the hash (post). Since the number of keys in a post is constant, retrieving that post becomes O(1). However, if we wanted to get all the posts, or a subset of them, it becomes useful to also store the keys in a sorted set (e.g. the "table"). Using a sorted set means that posts can be stored by their createdAt date and it allows us to retrieve all the posts, or a subset of them (useful for pagination).
+</p>
+
+
+```javascript  Retrieving a subset of all posts
+redis.zrange('posts', 0, 10, function(error, posts){
+  //return the keys (urls) associated with the first 11 posts
+})
+
+var startDate = (new Date(2012, 5, 1)).getTime() ; // June 1st
+var endDate = (new Date(2012, 5, 30)).getTime(); // June 30th
+redis.zrangebyscore('posts', startDate, endDate, function(err, posts){
+  //returns the keys (urls) associated with all the posts from June 2012
+})
+
+```
+
+<p>
+  The above example is relatively straight forward, but what about storing the post's comments? For every post we create a new sorted set called: 'comments-KEYofPOST'. The comments are sorted by their creation time. To get a post, and its comments, we could do the following:
+</p>
+
+```javascript Storing a post's comments
+var postURL = 'a-post-about-databases' 
+
+var multi = redis.multi();
+
+// queue up the queries
+multi.hgetall(postURL);
+multi.zrange('comments-' + postURL, 0, -1);
+
+// execute the queries atomically
+multi.exec( function(error, results){
+  /*
+  results[0] will contain the post
+  results[1] will contain an array with all the comments
+ */
+});
+```
+
+<h2>Redis vs. PostgreSQL Performance</h2>
+
+<p>
+  In SQL you might do 1 query to get the post and another to get the comments, or use a join to get the post and the comments in one query. With the approach above, using Redis, 2 queries are atomically executed, using the multi and exec commands. Both in PostgreSQL, and Redis, a single request is sent the database to retrieve 1 post and its 10 comments.
+</p>
+
+<p>
+  To test the the performance I created a dataset that includes 10,000 'blog posts', with each post having 10 comments (100,000 comments in total). All tests were run on a 2011 Macbook Pro (2.3 GHz i7, 8GB RAM). To test PostgreSQL, I sequentially fetched each post and used a join to retrieve its comments (10,000 separate queries). The test was repeated six times to produce an average time and was done for both PostgreSQL and Redis.
+</p>
+
+<div class="table">
+  <h2>Redis &amp; PostgreSQL Performance</h2>
+  <table>
+    <tr>
+      <th></th>
+      <th>Average Time (Seconds)</th>
+      <th>Query (Milliseconds)</th>
+    </tr>
+
+    <tr>
+      <td>psql</td>
+      <td>138.34</td>
+      <td>13.8</td>
+    </tr>
+
+    <tr>
+      <td>psql (Native Bindings)</td>
+      <td>125.95</td>
+      <td>12.6</td>
+    </tr>
+
+    <tr>
+      <td>Redis (Hires)</td>
+      <td>0.76</td>
+      <td>0.067</td>
+    </tr>
+
+  </table>
+</div>
+
+<p>
+  Using PostgreSQL, it took an average of 138.34 seconds to execute all 10,000 queries, or 13.8 milliseconds/query. Using the native bindings, that come with the psql node module, yielded an improvement and was associated with 12.6 millisecons/query. In contrast, Redis can retrieve a post and its comments in 0.067 milliseconds. Of course the above is akin to comparing apples to oranges, but it still provides a glimpse into the performance differences between Redis and PostgreSQL.
+</p>
+<p>
+  While Redis is in memory and should be fast, PostgreSQL uses caching algorithms (<a href="http://archives.postgresql.org/pgsql-hackers/2007-11/msg00562.php">LRU</a>) to keep its contents in memory. Of course, keeping everything in memory (Redis) will most likely be faster than using LRU.
+</p>
+
+<h2>Caveats to using Redis for Relational Data</h2>
+
+<p>
+  The single biggest caveat to using Redis, is that it is entirely in memory. If your relational dataset is 2.5GB (not that large), you'll need a $160/month Linode (4GB RAM) to keep it in Redis. In contrast, a $20/month Linode (512MB RAM) has 20GB of disk space and could easily hold that same dataset using PostgreSQL. This tradeoff becomes even more of an issue as your dataset become larger than 4GB. 
+</p>
+
+<p>
+  The above example only represents a very simple relationship between two pieces of data (posts and comments), mapping a many-to-many relationship in Redis would take a little more imagination. 
+</p>
+
+<h2>Conclusions</h2>
+<p>
+  Before storing all your app's data in Redis it's advisable to estimate how large your dataset will be in a year, or two, and how much much RAM will be required to use Redis. If your dataset will be greater than 4GB in a year, and money is a constraint, it probably makes sense to put all, or a portion of the data, in PostgreSQL, or use an alternative noSQL solution (e.g. Riak or Mongo).
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/Redis-and-Relational-Data"><span></span>Code on Github</a>
+</p>
