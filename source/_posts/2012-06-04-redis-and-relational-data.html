@@ -6,6 +6,9 @@ comments: true
 ---
 
 <p>
+  <strong>UPDATE:</strong> Based on the feedback in the comments (Phineas), I've added an index to the comments table and updated the results.
+</p>
+<p>
   Using the right tool for the job is a basic tenant amongst programmers. However, with all the currently available database options it's increasingly difficult to figure out what the right tool is. Sometime it's nice to have a very simple tool that can be used for many different tasks: Redis. Over the last 4 months I've been using Redis heavily and I've even started to use it for relational data. I've been curious to find out the performance differences between Redis and PostgreSQL. Below I'll provide an example of storing a simple relational dataset in Redis, and I'll look at the performance differences between Redis and PostgreSQL.
 </p>
 
@@ -103,9 +106,15 @@ multi.exec( function(error, results){
     </tr>
 
     <tr>
-      <td>psql (Native Bindings)</td>
+      <td>psql (Native Bindings - NB)</td>
       <td>125.95</td>
       <td>12.6</td>
+    </tr>
+
+    <tr>
+      <td>psql (NB + Index)</td>
+      <td>2.72</td>
+      <td>0.27</td>
     </tr>
 
     <tr>
@@ -118,7 +127,7 @@ multi.exec( function(error, results){
 </div>
 
 <p>
-  Using PostgreSQL, it took an average of 138.34 seconds to execute all 10,000 queries, or 13.8 milliseconds/query. Using the native bindings, that come with the psql node module, yielded an improvement and was associated with 12.6 millisecons/query. In contrast, Redis can retrieve a post and its comments in 0.067 milliseconds. Of course the above is akin to comparing apples to oranges, but it still provides a glimpse into the performance differences between Redis and PostgreSQL.
+  Using PostgreSQL, it took an average of 138.34 seconds to execute all 10,000 queries, or 13.8 milliseconds/query. Using the native bindings, that come with the psql node module, yielded an improvement and was associated with 12.6 millisecons/query. When an index was added to comments (post_id), the time dropped to 2.72 seconds, or 0.27 seconds for a post and its 10 comments. In contrast, Redis can retrieve a post and its comments in 0.067 milliseconds. Of course the above is akin to comparing apples to oranges, but it still provides a glimpse into the performance differences between Redis and PostgreSQL.
 </p>
 <p>
   While Redis is in memory and should be fast, PostgreSQL uses caching algorithms (<a href="http://archives.postgresql.org/pgsql-hackers/2007-11/msg00562.php">LRU</a>) to keep its contents in memory. Of course, keeping everything in memory (Redis) will most likely be faster than using LRU.
