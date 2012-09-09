@@ -1,0 +1,177 @@
+---
+layout: post
+title: "Common JavaScript Errors"
+date: 2012-09-09
+comments: true
+---
+
+<p>
+ With the rise of thick client-side applications, and Node.js, JavaScript has become an increasingly important programming language. Despite its simplicity, JavaScript presents some difficulties for those new to the language. I thought it would be useful to outline several JavaScript errors that I commonly made when I was learning the language.
+</p>
+
+<h2>Scope: this, that and window</h2>
+<p>
+  Like many programming languages JavaScript provides internal access to objects using the keyword <code>this</code>. Unfortunately, what <code>this</code> refers to differs depending on what called the function containing <code>this</code>. A common example, shown below, is what happens when <code>setTimeout</code> is called. 
+</p>
+<p>
+  In the example below a Dog object is created, with a bark function. The Dog ralph is instantiated with the name 'Ralph' and when <code>ralph.bark()</code> is called, "Ralph" is printed to the console.
+</p>
+<p>
+   What becomes confusing is what happens when <code>setTimeout</code> is called with the parameters <code>ralph.bark</code> and 500. After 500 milliseconds <code>ralph.bark</code> is called, however, nothing is printed to the console.
+</p>
+
+```javascript The this problem
+var Dog = function( name ){
+  this.name = name;
+}
+
+Dog.prototype.bark = function(){
+  console.log( this.name );
+}
+
+var ralph = new Dog('Ralph');
+
+ralph.bark() 
+// Ralph is printed to the console
+
+setTimeout( ralph.bark , 500 ); 
+// nothing is printed to the console
+```
+
+<p>
+  Mozilla Developer Network refers to the problem above as <a href="https://developer.mozilla.org/en-US/docs/DOM/window.setTimeout">'The "<code>this</code>" problem'</a>. What happens is <code>this</code> within <code>bark()</code> refers to the browser's <code>window</code> variable when <code>bark()</code> is called from setTimeout.
+</p>
+
+<h3>Avoiding the <code>this</code> problem.</h3>
+```javascript Solutions to the this problem.
+// Works in JavaScript 1.8.5
+setTimeout( ralph.bark.bind(ralph), 500 );
+
+// using jQuery
+setTimeout( $.proxy( ralph.bark, ralph ), 500 );
+
+// using undescore.js
+setTimeout( _.bind( ralph.bark, ralph ), 500 );
+
+// using an anonymous function
+setTimeout( function(){ ralph.bark(); }, 500 );
+
+```
+<p>In each of the above the bind, or proxy functions explicity ensure that <code>this</code> within <code>ralph.bark</code> refers to ralph and not <code>window</code>. In the final example an anonymous function is called and provides another way of fixing the <code>this</code> problem.</p>
+
+<h2>Callbacks in Loops</h2>
+<p>When I launched <a href="understoodit.com">Understoodit.com</a> in May I included a waitlist for interested users to signup. I was planning on inviting a few dozen users a day, however, due to a deluge of emails sending out invites was delayed by a week or two. 
+</p>
+<p>
+To send the invites out, I went to Understoodit's admin panel and seleted 40 people on the waiting list and clicked invite. A few days later I noticed that only a few individuals had accepted the invite. I looked at Postmark's logs and noticed that invites were only sent to 5 individuals. What's more those 5 individuals had received anywhere from 5 - 15 emails each. Meanwhile, the other 35 invitees had received no emails. The bug: I had a callback in a loop that iterated over all the selected invities and 1) called databaseModule.addInvitedUser, which created an invite token and added that invite to the database and 2) sent an email with the newly created token. Below is a simplification of the code, with error handling removed.</p>
+
+
+```javascript
+
+function sendInviteEmails( emails ){
+  for(var i = 0; i < emails.length; i++ ){
+
+    databaseModule.addInvitedUser( email[i], function( error, token ){
+
+      emailModule.sendInvite( email[i], token );
+
+    });
+  }
+}
+
+```
+
+<p>
+  What went wrong was that the anonymous function <a href="http://stackoverflow.com/a/3023979/146099">"captures the variable i, not its value"</a>.  The value of <code>i</code> is dependent on when the anonymous function is called, which varries depending on how long it takes to add the invited user to the database.
+</p>
+<p>
+  The solution I used was to wrap the anonymous function with an <a href="http://benalman.com/news/2010/11/immediately-invoked-function-expression/">immediately invoked function expression</a> (IIFE). The IIFE "locks" in the value of <code>i</code> ensuring that <code>emailModule.sendInvite()</code> refers to a different value of i on each IIFE call. Alternatively, one could create a second function outside of the loop and then call that (see option 2), a solution that would likely be easier to read. 
+</p>
+
+```javascript
+// option 1
+function sendInviteEmails( emails ){
+  for(var i = 0; i < emails.length; i++ ){
+
+    (function(i){
+      databaseModule.addInvitedUser( email[i], function( error, token ){
+        emailModule.sendInvite( email[i], token );
+      });
+    })(i);
+
+  }
+}
+
+// option 2
+function sendOneInviteEmail( email ){
+  databaseModule.addInvitedUser( email[i], function( error, token ){
+    emailModule.sendInvite( email[i], token );
+  });
+}
+
+function sendManyInviteEmails( emails ){
+  for(var i = 0; i < emails.length; i++ ){
+    sendOneInviteEmail( emails[i] );
+  }
+}
+
+```
+
+<p>
+  The above quirk seems similar to a fairly common JavaScript interview question that takes the form of <a href="http://tobyho.com/2011/11/02/callbacks-in-loops/">adding event listeners to an array of links</a>.
+</p>
+
+
+<h2>Global Variables</h2>
+<p>
+  The problems with global variables have been discussed many times before. Suffice it to say that you should avoid them by using <code>var</code> (e.g. <code>var x = 0;</code> vs </code>x = 0;</code>) when first declearing a variable. If you have a variable that has unaccounted for properties or values, there's a chance that a global variable could be to blame.
+</p>
+<p>
+  I'd highly recommend defining all your variables at the top of the function to make it as clear as possible when a var is missing. Furthermore I'd recommend using <a href="http://www.jshint.com/">JSHint</a> which can warn you of global variables.
+</p>
+
+<h2>Values in HTML forms</h2>
+
+```html A drop down menu
+<select id="order-sizes">
+  <option value="1">Small</option>
+  <option value="2">Medium</option>
+  <option value="3">Large</option>
+</select>
+```
+
+<p>When it comes time to get the form's values, and use them within an application, I usually do something like: </p>
+
+```javascript
+var orderSize = $('#order-sizes option:selected').val();
+
+if( orderSize === 1 ){
+  console.log('Thanks for ordering a small!');
+}
+```
+
+<p>Unfortunately the value that jQuery returns is a <code>String</code>, and comparing it to 1, a <code>Number</code> returns false. Here are several solutions to this:</p>
+
+```javascript
+
+
+if( Number( orderSize ) === 1 ){ ... }
+
+if( parseInt( orderSize ) === 1 ){ ... }
+
+if( orderSize == 1 ){ ... }
+
+// last solution
+var orderSize = Number( $('#order-sizes option:selected').val() );
+
+if( orderSize === 1 ){ ... }
+```
+
+<p>
+  In the first two examples orderSize is explicitly converted to a <code>Number</code> using the <code>Number</code> constructor and the global <code>parseInt</code> function. In the third example the double equals coerces orderSize to a <code>Number</code> before comparing to 1 (<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Comparison_Operators?redirectlocale=en-US&redirectslug=Core_JavaScript_1.5_Reference%2FOperators%2FComparison_Operators">MDN on comparison operators</a>). However, I'd recommend going with the last approach, which allows you to use orderSize as a <code>Number</code> in multiple spots without having to repeatedly caste to a number. If you don't like the last approach I'd recommend the first or second approach, since it seems to be generally preferred to use the strict equal (tripple equal signs) and not to use the double equal sign.
+</p>
+
+<h2>Conclusions</h2>
+<p>
+  Many of the above errors can be avoided by following JavaScript style guides (<a href="http://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml">Google JavaScript Style Guide</a>, <a href="http://addyosmani.com/blog/javascript-style-guides-and-beautifiers/">Addy Osmani on Style Guides</a>). A sign of how tricky JavaScript is comes from <a href="https://github.com/styleguide/javascript">Github's JavaScript Style guide</a> that goes as far to recommend avoiding JavaScript altogether and using CoffeeScript - a suggestion a few would disagree with!
+</p>
