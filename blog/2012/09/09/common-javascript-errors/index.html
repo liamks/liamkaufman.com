@@ -1,0 +1,595 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Common JavaScript Errors - Liam Kaufman</title>
+  <meta name="author" content="Liam Kaufman">
+
+  
+  <meta name="description" content="With the rise of thick client-side applications, and Node.js, JavaScript has become an increasingly important programming language. Despite its &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liamkaufman.com/blog/2012/09/09/common-javascript-errors">
+
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="alternate" title="Liam Kaufman" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1004776-5']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+ 
+  <h1><a href="/">Liam Kaufman</a></h1>
+  
+    <h2>Software Developer and Entrepreneur</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liamkaufman.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/projects.html">Projects</a></li>
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Common JavaScript Errors</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-09T00:00:00-04:00" pubdate data-updated="true">Sep 9<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>
+ With the rise of thick client-side applications, and Node.js, JavaScript has become an increasingly important programming language. Despite its simplicity, JavaScript presents some difficulties for those new to the language. I thought it would be useful to outline several JavaScript errors that I commonly made when I was learning the language.
+</p>
+
+<h2>Scope: this, that and window</h2>
+<p>
+  Like many programming languages JavaScript provides internal access to objects using the keyword <code>this</code>. Unfortunately, what <code>this</code> refers to differs depending on what called the function containing <code>this</code>. A common example, shown below, is what happens when <code>setTimeout</code> is called. 
+</p>
+<p>
+  In the example below a Dog object is created, with a bark function. The Dog ralph is instantiated with the name &#8216;Ralph&#8217; and when <code>ralph.bark()</code> is called, &#8220;Ralph&#8221; is printed to the console.
+</p>
+<p>
+   What becomes confusing is what happens when <code>setTimeout</code> is called with the parameters <code>ralph.bark</code> and 500. After 500 milliseconds <code>ralph.bark</code> is called, however, nothing is printed to the console.
+</p>
+
+<figure class='code'><figcaption><span>The this problem</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">Dog</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">name</span> <span class="p">){</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">Dog</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">bark</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">ralph</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dog</span><span class="p">(</span><span class="s1">&#39;Ralph&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">ralph</span><span class="p">.</span><span class="nx">bark</span><span class="p">()</span>
+</span><span class='line'><span class="c1">// Ralph is printed to the console</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">setTimeout</span><span class="p">(</span> <span class="nx">ralph</span><span class="p">.</span><span class="nx">bark</span> <span class="p">,</span> <span class="mi">500</span> <span class="p">);</span>
+</span><span class='line'><span class="c1">// nothing is printed to the console</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  Mozilla Developer Network refers to the problem above as <a href="https://developer.mozilla.org/en-US/docs/DOM/window.setTimeout">&#8216;The &#8221;<code>this</code>&#8221; problem&#8217;</a>. What happens is <code>this</code> within <code>bark()</code> refers to the browser&#8217;s <code>window</code> variable when <code>bark()</code> is called from setTimeout.
+</p>
+
+<h3>Avoiding the <code>this</code> problem.</h3>
+<figure class='code'><figcaption><span>Solutions to the this problem.</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// Works in JavaScript 1.8.5</span>
+</span><span class='line'><span class="nx">setTimeout</span><span class="p">(</span> <span class="nx">ralph</span><span class="p">.</span><span class="nx">bark</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">ralph</span><span class="p">),</span> <span class="mi">500</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// using jQuery</span>
+</span><span class='line'><span class="nx">setTimeout</span><span class="p">(</span> <span class="nx">$</span><span class="p">.</span><span class="nx">proxy</span><span class="p">(</span> <span class="nx">ralph</span><span class="p">.</span><span class="nx">bark</span><span class="p">,</span> <span class="nx">ralph</span> <span class="p">),</span> <span class="mi">500</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// using undescore.js</span>
+</span><span class='line'><span class="nx">setTimeout</span><span class="p">(</span> <span class="nx">_</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span> <span class="nx">ralph</span><span class="p">.</span><span class="nx">bark</span><span class="p">,</span> <span class="nx">ralph</span> <span class="p">),</span> <span class="mi">500</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// using an anonymous function</span>
+</span><span class='line'><span class="nx">setTimeout</span><span class="p">(</span> <span class="kd">function</span><span class="p">(){</span> <span class="nx">ralph</span><span class="p">.</span><span class="nx">bark</span><span class="p">();</span> <span class="p">},</span> <span class="mi">500</span> <span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>In each of the above the bind, or proxy functions explicity ensure that <code>this</code> within <code>ralph.bark</code> refers to ralph and not <code>window</code>. In the final example an anonymous function is called and provides another way of fixing the <code>this</code> problem.</p>
+
+<h2>Callbacks in Loops</h2>
+<p>When I launched <a href="understoodit.com">Understoodit.com</a> in May I included a waitlist for interested users to signup. I was planning on inviting a few dozen users a day, however, due to a deluge of emails sending out invites was delayed by a week or two. 
+</p>
+<p>
+To send the invites out, I went to Understoodit&#8217;s admin panel and seleted 40 people on the waiting list and clicked invite. A few days later I noticed that only a few individuals had accepted the invite. I looked at Postmark&#8217;s logs and noticed that invites were only sent to 5 individuals. What&#8217;s more those 5 individuals had received anywhere from 5 - 15 emails each. Meanwhile, the other 35 invitees had received no emails. The bug: I had a callback in a loop that iterated over all the selected invities and 1) called databaseModule.addInvitedUser, which created an invite token and added that invite to the database and 2) sent an email with the newly created token. Below is a simplification of the code, with error handling removed.</p>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">sendInviteEmails</span><span class="p">(</span> <span class="nx">emails</span> <span class="p">){</span>
+</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">emails</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">token</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  What went wrong was that the anonymous function <a href="http://stackoverflow.com/a/3023979/146099">&#8220;captures the variable i, not its value&#8221;</a>.  The value of <code>i</code> is dependent on when the anonymous function is called, which varries depending on how long it takes to add the invited user to the database.
+</p>
+<p>
+  The solution I used was to wrap the anonymous function with an <a href="http://benalman.com/news/2010/11/immediately-invoked-function-expression/">immediately invoked function expression</a> (IIFE). The IIFE &#8220;locks&#8221; in the value of <code>i</code> ensuring that <code>emailModule.sendInvite()</code> refers to a different value of i on each IIFE call. Alternatively, one could create a second function outside of the loop and then call that (see option 2), a solution that would likely be easier to read. 
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">// option 1</span>
+</span><span class='line'><span class="kd">function</span> <span class="nx">sendInviteEmails</span><span class="p">(</span> <span class="nx">emails</span> <span class="p">){</span>
+</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">emails</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
+</span><span class='line'>        <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">token</span> <span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">})(</span><span class="nx">i</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// option 2</span>
+</span><span class='line'><span class="kd">function</span> <span class="nx">sendOneInviteEmail</span><span class="p">(</span> <span class="nx">email</span> <span class="p">){</span>
+</span><span class='line'>  <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
+</span><span class='line'>    <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">token</span> <span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">function</span> <span class="nx">sendManyInviteEmails</span><span class="p">(</span> <span class="nx">emails</span> <span class="p">){</span>
+</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">emails</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">){</span>
+</span><span class='line'>    <span class="nx">sendOneInviteEmail</span><span class="p">(</span> <span class="nx">emails</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  The above quirk seems similar to a fairly common JavaScript interview question that takes the form of <a href="http://tobyho.com/2011/11/02/callbacks-in-loops/">adding event listeners to an array of links</a>.
+</p>
+
+
+<h2>Global Variables</h2>
+<p>
+  The problems with global variables have been discussed many times before. Suffice it to say that you should avoid them by using <code>var</code> (e.g. <code>var x = 0;</code> vs </code>x = 0;</code>) when first declearing a variable. If you have a variable that has unaccounted for properties or values, there&#8217;s a chance that a global variable could be to blame.
+</p>
+<p>
+  I&#8217;d highly recommend defining all your variables at the top of the function to make it as clear as possible when a var is missing. Furthermore I&#8217;d recommend using <a href="http://www.jshint.com/">JSHint</a> which can warn you of global variables.
+</p>
+
+<h2>Values in HTML forms</h2>
+
+<figure class='code'><figcaption><span>A drop down menu</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;select</span> <span class="na">id=</span><span class="s">&quot;order-sizes&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>Small<span class="nt">&lt;/option&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>Medium<span class="nt">&lt;/option&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;3&quot;</span><span class="nt">&gt;</span>Large<span class="nt">&lt;/option&gt;</span>
+</span><span class='line'><span class="nt">&lt;/select&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>When it comes time to get the form&#8217;s values, and use them within an application, I usually do something like: </p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">orderSize</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#order-sizes option:selected&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span><span class="p">(</span> <span class="nx">orderSize</span> <span class="o">===</span> <span class="mi">1</span> <span class="p">){</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Thanks for ordering a small!&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Unfortunately the value that jQuery returns is a <code>String</code>, and comparing it to 1, a <code>Number</code> returns false. Here are several solutions to this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="k">if</span><span class="p">(</span> <span class="nb">Number</span><span class="p">(</span> <span class="nx">orderSize</span> <span class="p">)</span> <span class="o">===</span> <span class="mi">1</span> <span class="p">){</span> <span class="p">...</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span><span class="p">(</span> <span class="nb">parseInt</span><span class="p">(</span> <span class="nx">orderSize</span> <span class="p">)</span> <span class="o">===</span> <span class="mi">1</span> <span class="p">){</span> <span class="p">...</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span><span class="p">(</span> <span class="nx">orderSize</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">){</span> <span class="p">...</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// last solution</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">orderSize</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">(</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#order-sizes option:selected&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span><span class="p">(</span> <span class="nx">orderSize</span> <span class="o">===</span> <span class="mi">1</span> <span class="p">){</span> <span class="p">...</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  In the first two examples orderSize is explicitly converted to a <code>Number</code> using the <code>Number</code> constructor and the global <code>parseInt</code> function. In the third example the double equals coerces orderSize to a <code>Number</code> before comparing to 1 (<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Comparison_Operators?redirectlocale=en-US&redirectslug=Core_JavaScript_1.5_Reference%2FOperators%2FComparison_Operators">MDN on comparison operators</a>). However, I&#8217;d recommend going with the last approach, which allows you to use orderSize as a <code>Number</code> in multiple spots without having to repeatedly caste to a number. If you don&#8217;t like the last approach I&#8217;d recommend the first or second approach, since it seems to be generally preferred to use the strict equal (tripple equal signs) and not to use the double equal sign.
+</p>
+
+<h2>Conclusions</h2>
+<p>
+  Many of the above errors can be avoided by following JavaScript style guides (<a href="http://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml">Google JavaScript Style Guide</a>, <a href="http://addyosmani.com/blog/javascript-style-guides-and-beautifiers/">Addy Osmani on Style Guides</a>). A sign of how tricky JavaScript is comes from <a href="https://github.com/styleguide/javascript">Github&#8217;s JavaScript Style guide</a> that goes as far to recommend avoiding JavaScript altogether and using CoffeeScript - a suggestion a few would disagree with!
+</p></div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Liam Kaufman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-09T00:00:00-04:00" pubdate data-updated="true">Sep 9<span>th</span>, 2012</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  <a href="http://news.ycombinator.com/submit" class="hn-share-button">Vote on HN</a>
+
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2012/09/09/common-javascript-errors/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2012/09/09/common-javascript-errors/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/06/04/redis-and-relational-data/" title="Previous Post: Redis and Relational Data">&laquo; Redis and Relational Data</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  <div class='social'>
+
+  <a id="twitter" href="https://twitter.com/liamkaufman"><span></span>@liamkaufman</a>
+  <a id="github" href="https://github.com/liamks"><span></span>@liamks</a>
+  <a id="linked-in" href="http://www.linkedin.com/pub/liam-kaufman/1b/7b4/2a4"><span></span>Liam Kaufman</a> 
+</div>
+
+
+  <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/09/09/common-javascript-errors/">Common JavaScript Errors</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/06/04/redis-and-relational-data/">Redis and Relational Data</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/">Adding Authentication, Waiting Lists and Sign Ups to an Express App Using Drawbridge.js and Redis</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/03/22/making-hacker-news-faster-two-approaches/">Making Hacker News Faster: Two Approaches</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/03/22/from-digg-to-reddit-to-hacker-news-whats-next/">From Digg to Reddit to Hacker News: What's Next?</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("liamkaufman", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <p>Follow <a href="http://twitter.com/liamkaufman">@liamkaufman</a></p>
+  
+</section>
+
+
+
+
+
+
+
+
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Liam Kaufman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2012/09/09/common-javascript-errors/';
+        var disqus_url = 'http://liamkaufman.com/blog/2012/09/09/common-javascript-errors/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+    
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2012/09/09/common-javascript-errors/';
+        var disqus_url = 'http://liamkaufman.com/blog/2012/09/09/common-javascript-errors/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  <script>
+    (function(d, t) {
+        var g = d.createElement(t),
+            s = d.getElementsByTagName(t)[0];
+        g.src = '//hnbutton.appspot.com/static/hn.js';
+        s.parentNode.insertBefore(g, s);
+    }(document, 'script'));
+  </script>
+</body>
+</html>
