@@ -71,9 +71,9 @@ To send the invites out, I went to Understoodit's admin panel and seleted 40 peo
 function sendInviteEmails( emails ){
   for(var i = 0; i < emails.length; i++ ){
 
-    databaseModule.addInvitedUser( email[i], function( error, token ){
+    databaseModule.addInvitedUser( emails[i], function( error, token ){
 
-      emailModule.sendInvite( email[i], token );
+      emailModule.sendInvite( emails[i], token );
 
     });
   }
@@ -93,19 +93,19 @@ function sendInviteEmails( emails ){
 function sendInviteEmails( emails ){
   for(var i = 0; i < emails.length; i++ ){
 
-    (function(i){
-      databaseModule.addInvitedUser( email[i], function( error, token ){
-        emailModule.sendInvite( email[i], token );
+    (function(email){
+      databaseModule.addInvitedUser( email, function( error, token ){
+        emailModule.sendInvite( email, token );
       });
-    })(i);
+    })( emails[i] );
 
   }
 }
 
 // option 2
 function sendOneInviteEmail( email ){
-  databaseModule.addInvitedUser( email[i], function( error, token ){
-    emailModule.sendInvite( email[i], token );
+  databaseModule.addInvitedUser( email, function( error, token ){
+    emailModule.sendInvite( email, token );
   });
 }
 
