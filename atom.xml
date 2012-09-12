@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2012-09-09T13:56:33-04:00</updated>
+  <updated>2012-09-11T20:07:15-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -115,9 +115,9 @@ To send the invites out, I went to Understoodit&#8217;s admin panel and seleted 
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">sendInviteEmails</span><span class="p">(</span> <span class="nx">emails</span> <span class="p">){</span>
 </span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">emails</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">){</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
+</span><span class='line'>    <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">emails</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
 </span><span class='line'>
-</span><span class='line'>      <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">token</span> <span class="p">);</span>
+</span><span class='line'>      <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">emails</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">token</span> <span class="p">);</span>
 </span><span class='line'>
 </span><span class='line'>    <span class="p">});</span>
 </span><span class='line'>  <span class="p">}</span>
@@ -160,19 +160,19 @@ To send the invites out, I went to Understoodit&#8217;s admin panel and seleted 
 </span><span class='line'><span class="kd">function</span> <span class="nx">sendInviteEmails</span><span class="p">(</span> <span class="nx">emails</span> <span class="p">){</span>
 </span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">emails</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">){</span>
 </span><span class='line'>
-</span><span class='line'>    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
-</span><span class='line'>        <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">token</span> <span class="p">);</span>
+</span><span class='line'>    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">email</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
+</span><span class='line'>        <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">,</span> <span class="nx">token</span> <span class="p">);</span>
 </span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">})(</span><span class="nx">i</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">})(</span> <span class="nx">emails</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">);</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="p">}</span>
 </span><span class='line'><span class="p">}</span>
 </span><span class='line'>
 </span><span class='line'><span class="c1">// option 2</span>
 </span><span class='line'><span class="kd">function</span> <span class="nx">sendOneInviteEmail</span><span class="p">(</span> <span class="nx">email</span> <span class="p">){</span>
-</span><span class='line'>  <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
-</span><span class='line'>    <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">token</span> <span class="p">);</span>
+</span><span class='line'>  <span class="nx">databaseModule</span><span class="p">.</span><span class="nx">addInvitedUser</span><span class="p">(</span> <span class="nx">email</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">token</span> <span class="p">){</span>
+</span><span class='line'>    <span class="nx">emailModule</span><span class="p">.</span><span class="nx">sendInvite</span><span class="p">(</span> <span class="nx">email</span><span class="p">,</span> <span class="nx">token</span> <span class="p">);</span>
 </span><span class='line'>  <span class="p">});</span>
 </span><span class='line'><span class="p">}</span>
 </span><span class='line'>
