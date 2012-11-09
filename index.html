@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="With the rise of thick client-side applications, and Node.js, JavaScript has become an increasingly important programming language. Despite its &hellip;">
+  <meta name="description" content="I was among many Canadian developers that was happy to hear that Stripe had come to Canada. We were planning on adding subscriptions to Understoodit &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,97 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/11/09/stripe-would-be-perfect-if/">Stripe Would Be Perfect If&#8230;</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-09T00:00:00-05:00" pubdate data-updated="true">Nov 9<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+I was among many Canadian developers that was happy to hear that Stripe had come to Canada. We were planning on adding subscriptions to <a href="https://understoodit.com">Understoodit.com</a>, so the timing couldn’t have been better. We assumed that it would take a couple of days to integrate Stripe, but it actually took <a href="https://twitter.com/davidmisshula">@davidmisshula</a> and I, 7 days. The process gave me some insights that I thought I’d share.
+</p>
+<p>
+I’ve heard that Stripe is significantly easier to integrate than its competitors, however, having never integrated a payment system I have no comparison. Overall I think Stripe is excellent and I’m glad we chose it, however, there are 4 areas, that if improved, would make Stripe perfect: 1) getting started, 2) taxes, 3) invoices and 4) edge cases.
+</p>
+<h2>Getting Started</h2>
+<p>
+Having never integrated a payment system into a website I wanted to be as careful as possible. I wanted to make sure that I understood as many details as possible, and had time to carefully map out all the things that needed to be done before pushing it to production. What I would have really liked was a diagram of how Stripe worked. A good diagram is much easier for me to parse, and would have helped me to understand the text documentation much quicker.
+</p>
+<p>
+For instance, below is one possible diagram that would show the potential set of events associated with a new user signing up for a subscription plan.
+</p>
+<div>
+<img src="/images/Stripe-Diagram.png" alt="A diagram of Stripe Payments">
+</div>
+<h2>Taxes</h2>
+<p style="text-align:center;">
+<img src="/images/stripe-response.png" alt="Stripe response to does it deal with taxes">
+</p>
+<p>
+Understoodit is based in Canada, obligating us to collect taxes from Canadians, but not our international customers. The kicker is that different provinces have different tax rates. In total there are 4 different tax rates and then no taxes for international customers, for a total of 5 different tax levels. We currently have 3 monthly plans, and their 3 yearly equivalents. This means that we had to create (3 + 3) x 5 = 30 plans within Stripe.
+</p>
+<p>
+It would have been significantly easier if Stripe had had a ‘tax’ feature, in the same way they have coupons. If such a feature existed we’d only have had to create 6 plans in Stripe and 4 tax levels. This would result in Stripe invoices including the subtotal, amount of taxes and total (one less thing for us to calculate). While Stripe does a great job of prorating payments, when a user switches from one plan to another, it becomes tricky for us when they switch province. While calculating taxes isn’t that difficult for us to do, it’s just one more thing we have to get right. It’s one more thing we have to calculate when sending an invoice to our customers.
+</p>
+<h2>Invoices</h2>
+<p style="text-align:center;">
+  <img src="/images/37signals-invoice.png" alt="picture of a 37 signals invoice">
+</p>
+<p>
+Every online subscription that I currently have sends me a simple invoice at the end of each billing period. Some have .pdfs attached that I can easily send to an accountant. Additionally, those services include admin panels that list all the past invoices and those can easily be downloaded as pdfs. 
+</p>
+<p>
+It would be amazing if Stripe handled 1) emailing invoices and 2) creating a .pdfs of each invoice. Developers could provide simple HTML templates for email and pdf invoices and Stripe would fill in the blanks and send the invoice at the correct time, to the correct user. I suspect people would be willing to pay extra for this feature.
+</p>
+<h2>Edge Cases</h2>
+<p>
+Like any feature, there are multiple edge cases to a payment system. For instance here are a few that we dealt with:
+</p>
+<ul>
+  <li>Upgrade plan, and simultaneously change provinces (e.g. tax rate)</li>
+  <li>Downgrade plan and simultaneously change provinces (e.g tax rate)</li>
+  <li>Change credit card info, but not billing address</li>
+  <li>Change plan, but keep credit card and billing info the same</li>
+</ul>
+
+<p>
+Stripe employees can no doubt enumerate many more edge cases than someone adding Stripe for the first time. It would be helpful if they provided a checklist of edge cases for developers. The checklist could also include common security concerns that developers should understand before rolling payments out.
+</p>
+<h2>Conclusions</h2>
+<p>
+With all the hype on Hacker News, I had this vision of Stripe being magically easy to integrate. While it wasn’t rocket science it was certainly more effort than I envisioned. The whole process was made significantly more difficult by having to handle taxes. 
+</p>
+<p>
+I wonder if there would be value in Stripe conducting the following usability experiment. Get a dozen computer science and engineering undergrads and ask them each to integrate Stripe into an existing website. Stripe employees would sit with them and monitor their progress (or lack of), but provide no help. I suspect that they’d find some surprises in how novices approach Stripe integration. The information gained in such an experiment could help them create better documentation, reduce development burden and ultimately create a more perfect Stripe.
+</p></div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1750,151 +1841,6 @@ While the above approach works, it was laborious and requires rebuilding the app
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/02/11/12-pushing-files-to-the-browser-using-deliveryjs-socketio-and-nodejs/">Pushing Files to the Browser Using Delivery.js, Socket.IO and Node.js</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-02-11T00:00:00-05:00" pubdate data-updated="true">Feb 11<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-Recently I&#8217;ve been working with both the HTML 5 File API and Socket.IO and it occured to me that those technologies could be used to send, and push, files between the client and server. Immediately I set about making delivery.js, a simple node module that makes it extremely easy to send and push files between the client and the server via Socket.IO. 
-</p>
-<p>
-I should note that this is my first node module, so constructive critism and feedback are welcome and encouraged! 
-</p>
-
-<h2> Example:  Pushing An Image To The Client</h2>
-<p>
-<a class="github" href="https://github.com/liamks/Delivery.js"><span></span>Delivery.js on Github</a>
-</p>
-<p>
-In the following example, once a client connects to the server an image will be pushed to the client. When the client receives the image, the image&#8217;s data URL (&#8220;data:image/gif;base64,R0lGODlhEAAOALMAAOazT&#8230;&#8221;) is assigned to the src attribute of an img element.
-</p>
-
-<figure class='code'><figcaption><span>Client</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s1">&#39;http://0.0.0.0:5001&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">delivery</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Delivery</span><span class="p">(</span><span class="nx">socket</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;receive.start&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">fileUID</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;receiving a file!&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;receive.success&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">){</span>
-</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">isImage</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="nx">file</span><span class="p">.</span><span class="nx">dataURL</span><span class="p">());</span>
-</span><span class='line'>      <span class="p">};</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Server</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">io</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io&#39;</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">5001</span><span class="p">),</span>
-</span><span class='line'>    <span class="nx">dl</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;delivery&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">socket</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">delivery</span> <span class="o">=</span> <span class="nx">dl</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">socket</span><span class="p">);</span>
-</span><span class='line'>  <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;delivery.connect&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">delivery</span><span class="p">){</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
-</span><span class='line'>      <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;sample-image.jpg&#39;</span><span class="p">,</span>
-</span><span class='line'>      <span class="nx">path</span> <span class="o">:</span> <span class="s1">&#39;./sample-image.jpg&#39;</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">delivery</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;send.success&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">file</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;File successfully sent to client!&#39;</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h2> Advantages </h2>
-
-<p>
-While delivery.js is more of an experiment, there could be some advantages to using Web Sockets to transfer files. Once a Web Socket connection is established  messages (frames) sent between the client and server contain only 2 additional bytes of overhead. In contrast, a traditional POST request, and response, may have headers totaling <a href="http://websocket.org/quantum.html">871 bytes</a>. This could be a significant addition if many files are being sent, and would be even more significant if files are being divided into batches before being sent to the server. When pushing files to the client, the overhead of traditional polling methods provides an even starker contrast to Web Sockets.
-</p>
-
-<h2> Disadvantages </h2>
-
-<p>
-The most apparent disadvantage would be the fact that it bipasses traditional caching methods. Instead of caching based on a file&#8217;s URL, caching would be based on the content of the Web Socket&#8217;s message. One possibility would be to cache a base64, or text, version of the file within Redis for fast, in memory, access. 
-</p>
-
-<h2> Future </h2>
-<p>
-With <a href="http://gildas-lormeau.github.com/zip.js/">zip.js</a> files could be deflated, or inflated, within the browser. In-browser file zipping could have a positive impact on transfer speeds. To check the integrity of the unzipped file an md5 checksum could be generated client-side, using Paul Johnston&#8217;s <a href="http://pajhome.org.uk/crypt/md5/">JavaScript MD5</a> implementation, and then passed along with the zipped file.
-</p>
-
-<p>
-For more documentation and examples see Delivery.js on Github:<br />
-<a class="github" href="https://github.com/liamks/Delivery.js"><span></span>Delivery.js on Github</a>
-</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1917,6 +1863,10 @@ For more documentation and examples see Delivery.js on Github:<br />
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/11/09/stripe-would-be-perfect-if/">Stripe Would Be Perfect If&#8230;</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/09/09/common-javascript-errors/">Common JavaScript Errors</a>
       </li>
     
@@ -1930,10 +1880,6 @@ For more documentation and examples see Delivery.js on Github:<br />
     
       <li class="post">
         <a href="/blog/2012/03/22/making-hacker-news-faster-two-approaches/">Making Hacker News Faster: Two Approaches</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/03/22/from-digg-to-reddit-to-hacker-news-whats-next/">From Digg to Reddit to Hacker News: What&#8217;s Next?</a>
       </li>
     
   </ul>
