@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="I was among many Canadian developers who where happy to hear that Stripe had come to Canada. We were planning on adding subscriptions to &hellip;">
+  <meta name="description" content="Being nice to your customers seems like a no brainer. It makes perfect business since: happy customers are less likely to stop using your service &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,55 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/11/21/why-you-should-be-nice-to-your-customers/">Why You Should Be Nice to Your Customers</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-11-21T00:00:00-05:00" pubdate data-updated="true">Nov 21<span>st</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+Being nice to your customers seems like a no brainer. It makes perfect business since: happy customers are less likely to stop using your service and more likely to refer your service to their friends. However, there is another significant reason that being nice pays off. 
+</p>
+<p>
+Running a startup can be a tough slog. You’re unsure if people like what you&#8217;re building enough for it to be successful. If you get some traction there will be people out there that will belittle your idea, or your execution. With all the unknowns, and the not-always-constructive criticism, it’s incredibly refreshing to interact with a nice customer that loves your product. 
+</p>
+<p> 
+I’ve noticed that the nicer I am to customers the nicer they are back. This virtuous circle means that we get more and more people who are willing to provide thoughtful criticism and who are willing to meet with us and give us feedback. We have one customer that loves <a href="https://understoodit.com">Understoodit</a> so much that he just finished writing a blog post for us (to be posted in the next week). 
+</p>
+<p>  
+After a difficult day in startup land it’s really gratifying to interact with a nice customer. It puts a face to an email address and makes the whole process of building software that much more interesting and fulfilling.
+</p>
+<p>
+Make sure you’re nice to your customers, they may just be nice back. 
+</p></div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1589,258 +1638,6 @@ While the above assessment is pretty rosey, Riak shouldn’t be the only databas
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/02/18/integrating-backbone-boilerplate-with-rails3/">Integrating Backbone Boilerplate With Rails 3</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-02-18T00:00:00-05:00" pubdate data-updated="true">Feb 18<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-Despite making several small Backbone.js apps in the past year, Backbone.js had never really clicked with me. I wasn&#8217;t crazy about having to spend time thinking about file and folder organizing for JavaScript and template files. I was also unsure how all the pieces would fit together. Thanks to Tim Branyen&#8217;s <a href="http://tbranyen.github.com/backbone-boilerplate/">Backbone Boilerplate</a> those issues have been significantly reduced. According to Backbone Boilerplate&#8217;s documentation: &#8220;This boilerplate is the product of much research and frustration. Existing boilerplates freely modify Backbone core, lack a build process, and are very prescriptive; this boilerplate changes that.&#8221;
-</p>
-<p>
-While I was excited to use Backbone Boilerplate, it wasn&#8217;t immediately clear how I&#8217;d integrate it with Rails 3. After several hours of tinkering I came up with an approach that places the build product of your backbone app in the <code>lib/assets</code> folder. This approach means that the application can be integrated into the assets pipeline and easily deployed to heroku.
-
-<p>
-<a class="github" href="https://github.com/liamks/Rails-Backbone-boilerplate"><span></span>Code on Github</a>
-</p>
-
-<h2> Creating the Rails App</h2>
-
-<figure class='code'><figcaption><span>Getting Started</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>// create a new rails app
-</span><span class='line'>rails new rails-bb
-</span><span class='line'><span class="nb">cd </span>rails-bb/lib
-</span><span class='line'>
-</span><span class='line'>//remove the index file
-</span><span class='line'>rm -r public/index.html
-</span><span class='line'>
-</span><span class='line'><span class="nb">cd </span>lib
-</span><span class='line'>git clone https://github.com/tbranyen/backbone-boilerplate.git
-</span><span class='line'><span class="nb">cd </span>backbone-boilerplate
-</span><span class='line'>
-</span><span class='line'>//switch to the amd branch
-</span><span class='line'>git checkout amd
-</span><span class='line'>rm -rf .git
-</span></code></pre></td></tr></table></div></figure>
-<h2> Changing Build Settings </h2>
-<p>
-In biolerplate&#8217;s config.js file modify the following to:
-</p>
-
-<figure class='code'><figcaption><span>line 49 - lib/backbone-boilerplate/build/config.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">concat</span><span class="o">:</span> <span class="p">{</span>
-</span><span class='line'>  <span class="s2">&quot;dist/debug/require.js&quot;</span><span class="o">:</span> <span class="p">[</span>
-</span><span class='line'>    <span class="s2">&quot;assets/js/libs/almond.js&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="s2">&quot;dist/debug/templates.js&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="s2">&quot;dist/debug/require.js&quot;</span>
-</span><span class='line'>  <span class="p">],</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="s2">&quot;../assets/javascripts/require-app.js&quot;</span><span class="o">:</span> <span class="p">[</span>
-</span><span class='line'>    <span class="s2">&quot;assets/js/libs/almond.js&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="s2">&quot;dist/debug/templates.js&quot;</span><span class="p">,</span>
-</span><span class='line'>    <span class="s2">&quot;dist/debug/require.js&quot;</span>
-</span><span class='line'>  <span class="p">]</span>
-</span><span class='line'><span class="p">},</span>
-</span></code></pre></td></tr></table></div></figure>
-<figure class='code'><figcaption><span>line 67 - lib/backbone-boilerplate/build/config.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">mincss</span><span class="o">:</span> <span class="p">{</span>
-</span><span class='line'>  <span class="s2">&quot;dist/release/index.css&quot;</span><span class="o">:</span> <span class="p">[</span>
-</span><span class='line'>    <span class="s2">&quot;assets/css/style.css&quot;</span>
-</span><span class='line'>  <span class="p">],</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="s2">&quot;../assets/stylesheets/index.css&quot;</span><span class="o">:</span> <span class="p">[</span>
-</span><span class='line'>    <span class="s2">&quot;assets/css/style.css&quot;</span>
-</span><span class='line'>  <span class="p">]</span>
-</span><span class='line'><span class="p">},</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h2> Creating a Rails Layout and Controller </h2>
-<p>
-To build the app, go to <code>lib/backbone-boilerplate</code> and run <code>node build default mincss</code>. The build script will create <code>lib/assets/javascripts/require-app.js</code> that includes both the backbone-boilerplate application and the template files. In next step create a rails layout file <code>app/views/layouts/bbapp.html.erb</code> with the following content:
-</p>
-
-<figure class='code'><figcaption><span>bbapp.html.erb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span class='line'><span class="nt">&lt;html&gt;</span>
-</span><span class='line'><span class="nt">&lt;head&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;meta</span> <span class="na">http-equiv=</span><span class="s">&quot;X-UA-Compatible&quot;</span> <span class="na">content=</span><span class="s">&quot;IE=edge,chrome=1&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content=</span><span class="s">&quot;width=device-width,initial-scale=1&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;title&gt;</span>RailsBb<span class="nt">&lt;/title&gt;</span>
-</span><span class='line'>  <span class="err">&lt;</span>%= stylesheet_link_tag    &quot;application&quot;, :media =&gt; &quot;all&quot; %&gt;
-</span><span class='line'>  <span class="err">&lt;</span>%= csrf_meta_tags %&gt;
-</span><span class='line'><span class="nt">&lt;/head&gt;</span>
-</span><span class='line'><span class="nt">&lt;body&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c">&lt;!-- Main container --&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;div</span> <span class="na">role=</span><span class="s">&quot;main&quot;</span> <span class="na">id=</span><span class="s">&quot;main&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c">&lt;!-- Application source --&gt;</span>
-</span><span class='line'>  <span class="err">&lt;</span>%= javascript_include_tag &quot;bbapp&quot;, &quot;data-main&quot; =&gt; &quot;app/index&quot; %&gt;
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;/body&gt;</span>
-</span><span class='line'><span class="nt">&lt;/html&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>
-To plug the backbone app into the asset pipeline create <code>assets/javascript/bbapp.js</code> with the following contents:
-</p>
-
-<figure class='code'><figcaption><span>bbapp.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="c1">//</span>
-</span><span class='line'><span class="c1">//= require require-app</span>
-</span></code></pre></td></tr></table></div></figure>
-<p>
-Now we need to let rails know that it needs to compile bbapp.js for production. To do this open <code>config/environments/production.rb</code> and after <code>config.assets.compile = false</code> add:  
-</p>
-
-<figure class='code'><figcaption><span>config\environments\production.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">config</span><span class="o">.</span><span class="n">assets</span><span class="o">.</span><span class="n">precompile</span> <span class="o">+=</span> <span class="sx">%w( bbapp.js )</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>
-To test that this works, we&#8217;ll create a controller that has a single action that uses the <code>bbapp.html.erb</code> layout. From the root of the rails-bb application:
-</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>rails generate controller BackBoneBoilerplate app
-</span></code></pre></td></tr></table></div></figure>
-
-<p>
-Go to the controller that was just created: <code>back_bone_boilerplate_controller.rb</code> and specify the layout:
-</p>
-
-<figure class='code'><figcaption><span>app/controllers/back_bone_boilerplate_controller.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">BackBoneBoilerplateController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">layout</span> <span class="s1">&#39;bbapp&#39;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">app</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h2> Final Steps </h2>
-<p>
-In <code>config/routes.rb</code> a root route is added to point to the controller actiona associated with the backbone app: <code>root :to => 'back_bone_boilerplate#app'</code> At this point we&#8217;re nearly done. Unfortunately to get the backbone.png to load I changed the src attribute, of the img tag on line 2, in <code>lib/backbone-boilerplate/templates/example.html</code> to <code>src="/assets/backbone.png"</code> and then from <code>lib/backbone-boilerplate</code>:
-</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>cp assets/img/backbone.png ../app/assets/images/backbone.png
-</span><span class='line'>
-</span><span class='line'><span class="se">\\</span>recompile
-</span><span class='line'>node build default mincss
-</span><span class='line'>
-</span><span class='line'><span class="nb">cd</span> ..
-</span><span class='line'>rails server
-</span></code></pre></td></tr></table></div></figure>
-
-<p>
-If all went well, when you go to http://0.0.0.0:3000 you should see:
-</p>
-<p>
-<img src="/images/backbone-boilerplate.png">
-</p>
-
-<p>
-While the above approach works, it was laborious and requires rebuilding the application with each change. Watching for changes with <code>node build watch</code> would certainly help. I think the advantage of this approach is that in development you can debug the JavaScript, while in production the javascript is minified and goes through the asset pipeline like any other JavaScript file in a Rails app.
-</p></div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1863,6 +1660,10 @@ While the above approach works, it was laborious and requires rebuilding the app
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/11/21/why-you-should-be-nice-to-your-customers/">Why You Should Be Nice To Your Customers</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/11/09/stripe-would-be-perfect-if/">Stripe Would Be Perfect If&#8230;</a>
       </li>
     
@@ -1876,10 +1677,6 @@ While the above approach works, it was laborious and requires rebuilding the app
     
       <li class="post">
         <a href="/blog/2012/04/21/adding-authentication-waiting-lists-and-sign-ups-to-and-express-app-using-drawbridge-and-redis/">Adding Authentication, Waiting Lists and Sign Ups to an Express App Using Drawbridge.js and Redis</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/03/22/making-hacker-news-faster-two-approaches/">Making Hacker News Faster: Two Approaches</a>
       </li>
     
   </ul>
