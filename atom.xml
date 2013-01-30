@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-01-22T21:05:53-05:00</updated>
+  <updated>2013-01-29T23:24:45-05:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -12,6 +12,69 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Are You Ready To Launch?]]></title>
+    <link href="http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch/"/>
+    <updated>2013-01-30T00:00:00-05:00</updated>
+    <id>http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch</id>
+    <content type="html"><![CDATA[<p>
+  <strong>Last Week</strong>: <a href="http://liamkaufman.com/blog/2013/01/22/making-software-people-want-before-launching/">Before Launching, Build Software People Use</a>
+</p>
+<p>
+You’ve created a product that people want to use, and now you’re eager to launch. From my experiences launching <a href="https://understoodit.com">Understoodit</a>, in May 2012, I’ve compiled a set of steps that helped Understoodit get on several big sites including <a href="http://techcrunch.com/2012/05/02/understoodit-lets-students-voice-their-confusion-without-having-to-raise-their-hands/">TechCrunch</a>, <a href="http://www.thestar.com/news/gta/article/1173277--don-t-get-what-the-prof-s-talking-about-there-s-an-app-for-that">Toronto Star</a>, and <a href="http://betakit.com/2012/05/03/understoodit-helps-confused-students-in-the-classroom">BetaKit</a>. If you have a large budget hiring a PR firm might be your best bet, otherwise the steps below will help you get started.
+</p>
+
+<h2>A Unique Angle</h2>
+<p>
+If you’re going to catch people’s attention in an app saturated environment, it’s important to communicate what&#8217;s unique about your app. If you’ve created a todo app, is it for Doctors, Engineers or does it something truly unique? If you can’t figure out why your product is unique it&#8217;s going to be a tough sell and it will certainly make it more difficult to get the press interested on your launch day. 
+</p>
+<p>
+The unique angle for Understoodit was focusing on its confusion feedback feature (students can click confused, and in real-time the teacher can see what percentage of students are confused). If I had said Understoodit was a &#8220;classroom response system&#8221;, I would have had a much harder time competing for attention.
+</p>
+<h2>Press Release</h2>
+<p>
+An important step in preparing for a launch is crafting a press release. If you’ve never written one, or you aren’t a strong writer, I’d recommend hiring someone to write it with you (<a href="http://www.linkedin.com/pub/vicki-so/29/350/903">Vicki So</a> helped me). 
+</p>
+<p>
+My familiarity with Understoodit made it difficult to objectively write about it. When you’re focused on the technical side of your product it can be easy to loose focus on what’s important to prospective users. By asking good questions, Vicki was able to tease out of me what was important about Understoodit and why educators might be interested. She was able to turn a product launch into an interesting story about how I started Understoodit. 
+</p>
+<p>
+Reporters read many press releases each day, make sure yours is interesting, <a href="http://www.markevanstech.com/2013/01/29/why-startups-need-to-be-great-storytellers/">tells a story</a>, and is well crafted.
+</p>
+
+<h2>Reporters &amp; Bloggers</h2>
+<p>
+One of the most important tips Vicki gave me was: send the press release to a specific reporter, not a newspaper or website in general. A reporter who covers education is potentially more interested in Understoodit than the average person handling general enquiries. In preparation for launch I made a long list of reporters that cover education, and on launch day I emailed each of them a quick note with a press release attached. I’d also recommend adding reporters who cover small business and startups to your list, they may also be interested. 
+</p>
+<p>
+In addition to reporters, I contacted a couple local tech bloggers and asked if I could give them a face-to-face demo. This approached allowed me to pitch a reporter at BetaKit, a Toronto-based website that covers startups. They ended up doing an <a href="http://betakit.com/2012/05/03/understoodit-helps-confused-students-in-the-classroom">article about Understoodit</a> a day after the launch.
+</p>
+
+<h2>Social Media</h2>
+<p>
+I’m no social media expert, but I can say it played an important role in the early success of Understoodit. Facebook and Twitter were huge sources of traffic, as were social news sites such as Hacker News. Depending on your product’s niche you might have more luck with other social networks such as Pinterest or Instagram. However, for you to have a big impact on sites like Twitter, or Pinterest, it helps to have a lot of followers. Gaining followers takes time and is something you should consider long before you launch. 
+</p>
+
+<h2>Friends &amp; Family</h2>
+<p>
+I owe a lot of Understoodit’s launch success to friends that not only helped me with the press release, but also tweeted, liked and voted up Understoodit on launch day. Friends and family are also critical in getting you over the trough of despair - so be kind to them!
+</p>
+
+<h2>Luck</h2>
+<p>
+No matter how prepared you are there is a strong component of luck to a successful launch. Was your press release the first that a reporter read, or did they read it after reading 5 others? Was there a major news event on the day of your launch? Did a writer on TechCrunch see your launch on Hacker News? All those things are mostly out of your control but can greatly affect your success. Preparation can mitigate some of those issues. For instance, it’s always a good idea to see if there might be any important news events, or tech announcements, that could overshadow your launch. 
+</p>
+
+<h2>Conclusions</h2>
+<p>
+After following the above actions, mixed with a healthy dose of luck, I was on the front page of Hacker News, and later that day on TechCrunch. Over a 24 hour period Understoodit received hundreds of registrations. Ultimately, that initial burst of excitement made it possible to get an article in the Toronto Star and the Chronicle of Higher Education.
+</p>
+<p>
+<strong>Next Week</strong>: I will cover 3 important metrics that you need watch after launching your product.
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Before Launching Build Software People Use]]></title>
@@ -41,7 +104,7 @@ At this stage you’ve created an MVP, with one critical feature, and you’re e
 </p>
 <h2>Stage 4: Engaged Users?</h2>
 <p>
-During early beta testing you hopefully received a lot of positive feedback. (And thanks to many who gave me feedback, including readers of this blog.) But don’t conflate positive feedback with engagement. <em>Just because a user says your app is great, it doesn’t guarantee that they will actually use it, let alone pay for it</em>. However, if your early beta testers keep using it, and start telling their friends, then that’s a good sign. On the other hand, if they stop using it, it’s critical to find out why they’re not using it. If you can’t engage your early beta testers (that is, users who’ve invested a lot of time already), it will be difficult to engage new users after launch. This stage is important! So don’t fool yourself into thinking you’ve created a great product unless you have engaged users using your app regularly (self awareness and intropection are important attributes for entreprenuers [2]). If your users aren’t engaged you have to decide whether to go back to early beta testing, pivot, or scrap the idea entirely.
+During early beta testing you hopefully received a lot of positive feedback. (And thanks to many who gave me feedback, including readers of this blog.) But don’t conflate positive feedback with engagement. <em>Just because a user says your app is great, it doesn’t guarantee that they will actually use it, let alone pay for it</em>. However, if your early beta testers keep using it, and start telling their friends, then that’s a good sign. On the other hand, if they stop using it, it’s critical to find out why they’re not using it. If you can’t engage your early beta testers (that is, users who’ve invested a lot of time already), it will be difficult to engage new users after launch. This stage is important! So don’t fool yourself into thinking you’ve created a great product unless you have engaged users using your app regularly (self awareness and introspection are important attributes for entreprenuers [2]). If your users aren’t engaged you have to decide whether to go back to early beta testing, pivot, or scrap the idea entirely.
 </p>
 <h2>Stage 5: Time to launch</h2>
 <p>

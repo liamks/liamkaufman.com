@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Stripe Would Be Perfect If... - Liam Kaufman</title>
+  <title>Are You Ready To Launch? - Liam Kaufman</title>
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="I was among many Canadian developers who where happy to hear that Stripe had come to Canada. We were planning on adding subscriptions to &hellip;">
+  <meta name="description" content="Last Week: Before Launching, Build Software People Use You’ve created a product that people want to use, and now you’re eager to launch. From my &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://liamkaufman.com/blog/2012/11/09/stripe-would-be-perfect-if">
+  <link rel="canonical" href="http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch">
 
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -82,7 +82,7 @@
   
   <header>
     
-      <h1 class="entry-title">Stripe Would Be Perfect If...</h1>
+      <h1 class="entry-title">Are You Ready to Launch?</h1>
     
     
       <p class="meta">
@@ -98,7 +98,7 @@
   
 
 
-<time datetime="2012-11-09T00:00:00-05:00" pubdate data-updated="true">Nov 9<span>th</span>, 2012</time>
+<time datetime="2013-01-30T00:00:00-05:00" pubdate data-updated="true">Jan 30<span>th</span>, 2013</time>
         
       </p>
     
@@ -106,62 +106,61 @@
 
 
 <div class="entry-content"><p>
-I was among many Canadian developers who where happy to hear that Stripe had come to Canada. We were planning on adding subscriptions to <a href="https://understoodit.com">Understoodit.com</a>, so the timing couldn’t have been better. We assumed that it would take a couple of days to integrate Stripe, but it actually took <a href="https://twitter.com/davidmisshula">@davidmisshula</a> and me 7 days. The process gave me some insights that I thought I’d share.
+  <strong>Last Week</strong>: <a href="http://liamkaufman.com/blog/2013/01/22/making-software-people-want-before-launching/">Before Launching, Build Software People Use</a>
 </p>
 <p>
-I’ve heard that Stripe is significantly easier to integrate than its competitors, however, having never integrated a payment system I have no comparison. Overall I think Stripe is excellent and I’m glad we chose it, however, there are 4 areas, that if improved, would make Stripe perfect: 1) getting started, 2) taxes, 3) invoices and 4) edge cases.
+You’ve created a product that people want to use, and now you’re eager to launch. From my experiences launching <a href="https://understoodit.com">Understoodit</a>, in May 2012, I’ve compiled a set of steps that helped Understoodit get on several big sites including <a href="http://techcrunch.com/2012/05/02/understoodit-lets-students-voice-their-confusion-without-having-to-raise-their-hands/">TechCrunch</a>, <a href="http://www.thestar.com/news/gta/article/1173277--don-t-get-what-the-prof-s-talking-about-there-s-an-app-for-that">Toronto Star</a>, and <a href="http://betakit.com/2012/05/03/understoodit-helps-confused-students-in-the-classroom">BetaKit</a>. If you have a large budget hiring a PR firm might be your best bet, otherwise the steps below will help you get started.
 </p>
-<h2>Getting Started</h2>
-<p>
-Having never integrated a payment system into a website I wanted to be as careful as possible. I wanted to make sure that I understood as many details as possible, and had time to carefully map out all the things that needed to be done before pushing it to production. What I would have really liked was a diagram of how Stripe worked. A good diagram is much easier for me to parse, and would have helped me to understand the text documentation much quicker.
-</p>
-<p>
-For instance, below is one possible diagram that would show the potential set of events associated with a new user signing up for a subscription plan.
-</p>
-<div>
-<img src="/images/Stripe-Diagram.png" alt="A diagram of Stripe Payments">
-</div>
-<h2>Taxes</h2>
-<p style="text-align:center;">
-<img src="/images/stripe-response.png" alt="Stripe response to does it deal with taxes">
-</p>
-<p>
-Understoodit is based in Canada, obligating us to collect taxes from Canadians, but not our international customers. The kicker is that different provinces have different tax rates. In total there are 4 different tax rates and then no taxes for international customers, for a total of 5 different tax levels. We currently have 3 monthly plans, and their 3 yearly equivalents. This means that we had to create (3 + 3) x 5 = 30 plans within Stripe.
-</p>
-<p>
-It would have been significantly easier if Stripe had had a ‘tax’ feature, in the same way they have coupons. If such a feature existed we’d only have had to create 6 plans in Stripe and 4 tax levels. This would result in Stripe invoices including the subtotal, amount of taxes and total (one less thing for us to calculate). While Stripe does a great job of prorating payments, when a user switches from one plan to another, it becomes tricky for us when they switch province. While calculating taxes isn’t that difficult for us to do, it’s just one more thing we have to get right. It’s one more thing we have to calculate when sending an invoice to our customers.
-</p>
-<h2>Invoices</h2>
-<p style="text-align:center;">
-  <img src="/images/37signals-invoice.png" alt="picture of a 37 signals invoice">
-</p>
-<p>
-Every online subscription that I currently have sends me a simple invoice at the end of each billing period. Some have .pdfs attached that I can easily send to an accountant. Additionally, those services include admin panels that list all the past invoices and those can easily be downloaded as pdfs. 
-</p>
-<p>
-It would be amazing if Stripe handled 1) emailing invoices and 2) creating a .pdfs of each invoice. Developers could provide simple HTML templates for email and pdf invoices and Stripe would fill in the blanks and send the invoice at the correct time, to the correct user. I suspect people would be willing to pay extra for this feature.
-</p>
-<h2>Edge Cases</h2>
-<p>
-Like any feature, there are multiple edge cases to a payment system. For instance here are a few that we dealt with:
-</p>
-<ul>
-  <li>Upgrade plan, and simultaneously change provinces (e.g. tax rate)</li>
-  <li>Downgrade plan and simultaneously change provinces (e.g tax rate)</li>
-  <li>Change credit card info, but not billing address</li>
-  <li>Change plan, but keep credit card and billing info the same</li>
-</ul>
 
+<h2>A Unique Angle</h2>
 <p>
-Stripe employees can no doubt enumerate many more edge cases than someone adding Stripe for the first time. It would be helpful if they provided a checklist of edge cases for developers. The checklist could also include common security concerns that developers should understand before rolling payments out.
+If you’re going to catch people’s attention in an app saturated environment, it’s important to communicate what&#8217;s unique about your app. If you’ve created a todo app, is it for Doctors, Engineers or does it something truly unique? If you can’t figure out why your product is unique it&#8217;s going to be a tough sell and it will certainly make it more difficult to get the press interested on your launch day. 
 </p>
+<p>
+The unique angle for Understoodit was focusing on its confusion feedback feature (students can click confused, and in real-time the teacher can see what percentage of students are confused). If I had said Understoodit was a &#8220;classroom response system&#8221;, I would have had a much harder time competing for attention.
+</p>
+<h2>Press Release</h2>
+<p>
+An important step in preparing for a launch is crafting a press release. If you’ve never written one, or you aren’t a strong writer, I’d recommend hiring someone to write it with you (<a href="http://www.linkedin.com/pub/vicki-so/29/350/903">Vicki So</a> helped me). 
+</p>
+<p>
+My familiarity with Understoodit made it difficult to objectively write about it. When you’re focused on the technical side of your product it can be easy to loose focus on what’s important to prospective users. By asking good questions, Vicki was able to tease out of me what was important about Understoodit and why educators might be interested. She was able to turn a product launch into an interesting story about how I started Understoodit. 
+</p>
+<p>
+Reporters read many press releases each day, make sure yours is interesting, <a href="http://www.markevanstech.com/2013/01/29/why-startups-need-to-be-great-storytellers/">tells a story</a>, and is well crafted.
+</p>
+
+<h2>Reporters &amp; Bloggers</h2>
+<p>
+One of the most important tips Vicki gave me was: send the press release to a specific reporter, not a newspaper or website in general. A reporter who covers education is potentially more interested in Understoodit than the average person handling general enquiries. In preparation for launch I made a long list of reporters that cover education, and on launch day I emailed each of them a quick note with a press release attached. I’d also recommend adding reporters who cover small business and startups to your list, they may also be interested. 
+</p>
+<p>
+In addition to reporters, I contacted a couple local tech bloggers and asked if I could give them a face-to-face demo. This approached allowed me to pitch a reporter at BetaKit, a Toronto-based website that covers startups. They ended up doing an <a href="http://betakit.com/2012/05/03/understoodit-helps-confused-students-in-the-classroom">article about Understoodit</a> a day after the launch.
+</p>
+
+<h2>Social Media</h2>
+<p>
+I’m no social media expert, but I can say it played an important role in the early success of Understoodit. Facebook and Twitter were huge sources of traffic, as were social news sites such as Hacker News. Depending on your product’s niche you might have more luck with other social networks such as Pinterest or Instagram. However, for you to have a big impact on sites like Twitter, or Pinterest, it helps to have a lot of followers. Gaining followers takes time and is something you should consider long before you launch. 
+</p>
+
+<h2>Friends &amp; Family</h2>
+<p>
+I owe a lot of Understoodit’s launch success to friends that not only helped me with the press release, but also tweeted, liked and voted up Understoodit on launch day. Friends and family are also critical in getting you over the trough of despair - so be kind to them!
+</p>
+
+<h2>Luck</h2>
+<p>
+No matter how prepared you are there is a strong component of luck to a successful launch. Was your press release the first that a reporter read, or did they read it after reading 5 others? Was there a major news event on the day of your launch? Did a writer on TechCrunch see your launch on Hacker News? All those things are mostly out of your control but can greatly affect your success. Preparation can mitigate some of those issues. For instance, it’s always a good idea to see if there might be any important news events, or tech announcements, that could overshadow your launch. 
+</p>
+
 <h2>Conclusions</h2>
 <p>
-With all the hype on Hacker News, I had this vision of Stripe being magically easy to integrate. While it wasn’t rocket science it was certainly more effort than I envisioned. The whole process was made significantly more difficult by having to handle taxes. 
+After following the above actions, mixed with a healthy dose of luck, I was on the front page of Hacker News, and later that day on TechCrunch. Over a 24 hour period Understoodit received hundreds of registrations. Ultimately, that initial burst of excitement made it possible to get an article in the Toronto Star and the Chronicle of Higher Education.
 </p>
 <p>
-I wonder if there would be value in Stripe conducting the following usability experiment. Get a dozen computer science and engineering undergrads and ask them each to integrate Stripe into an existing website. Stripe employees would sit with them and monitor their progress (or lack of), but provide no help. I suspect that they’d find some surprises in how novices approach Stripe integration. The information gained in such an experiment could help them create better documentation, reduce development burden and ultimately create a more perfect Stripe.
-</p></div>
+<strong>Next Week</strong>: I will cover 3 important metrics that you need watch after launching your product.
+</p>
+</div>
 
 
   <footer>
@@ -183,7 +182,7 @@ I wonder if there would be value in Stripe conducting the following usability ex
   
 
 
-<time datetime="2012-11-09T00:00:00-05:00" pubdate data-updated="true">Nov 9<span>th</span>, 2012</time>
+<time datetime="2013-01-30T00:00:00-05:00" pubdate data-updated="true">Jan 30<span>th</span>, 2013</time>
       
 
 
@@ -193,7 +192,7 @@ I wonder if there would be value in Stripe conducting the following usability ex
   <a href="http://news.ycombinator.com/submit" class="hn-share-button">Vote on HN</a>
 
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2012/11/09/stripe-would-be-perfect-if/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2012/11/09/stripe-would-be-perfect-if/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -206,10 +205,8 @@ I wonder if there would be value in Stripe conducting the following usability ex
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2012/09/09/common-javascript-errors/" title="Previous Post: Common JavaScript Errors">&laquo; Common JavaScript Errors</a>
+        <a class="basic-alignment left" href="/blog/2013/01/22/making-software-people-want-before-launching/" title="Previous Post: Before Launching Build Software People Use">&laquo; Before Launching Build Software People Use</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2012/11/21/why-you-should-be-nice-to-your-customers/" title="next Post: Why You Should Be Nice To Your Customers">Why You Should Be Nice To Your Customers &raquo;</a>
       
     </p>
   </footer>
@@ -301,8 +298,8 @@ I wonder if there would be value in Stripe conducting the following usability ex
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://liamkaufman.com/blog/2012/11/09/stripe-would-be-perfect-if/';
-        var disqus_url = 'http://liamkaufman.com/blog/2012/11/09/stripe-would-be-perfect-if/';
+        var disqus_identifier = 'http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch/';
+        var disqus_url = 'http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch/';
         var disqus_script = 'embed.js';
       
     (function () {
@@ -356,8 +353,8 @@ I wonder if there would be value in Stripe conducting the following usability ex
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://liamkaufman.com/blog/2012/11/09/stripe-would-be-perfect-if/';
-        var disqus_url = 'http://liamkaufman.com/blog/2012/11/09/stripe-would-be-perfect-if/';
+        var disqus_identifier = 'http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch/';
+        var disqus_url = 'http://liamkaufman.com/blog/2013/01/30/are-you-ready-to-launch/';
         var disqus_script = 'embed.js';
       
     (function () {
