@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="In the last few years there has been a proliferation of noSQL databases. Searching on Google for site:news.ycombinator.com nosql yields over 2,500 &hellip;">
+  <meta name="description" content="I always found it odd that accessing DOM elements with Ruby, or Python, wasn&#8217;t as easy as it was with jQuery. Many HTML parsing libraries &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,167 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/03/08/scraping-web-pages-with-jquery-nodejs-and-jsdom/">Scraping Web Pages With jQuery, Node.js and Jsdom</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-08T00:00:00-05:00" pubdate data-updated="true">Mar 8<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+I always found it odd that accessing DOM elements with Ruby, or Python, wasn&#8217;t as easy as it was with jQuery. Many HTML parsing libraries employ Simple API for XML (SAX) that can handle extremely large XML documents, but is cumbersome and adds complexity. Other parsing libraries use XML Path Language (XPath), which is conceptually simpler than SAX, but still more of an effort than jQuery. I was pleasantly surprised to discover that it&#8217;s possible to use jQuery to parse web pages with Node.js. This is accomplished by using <a href="https://github.com/tmpvar/jsdom">jsdom, &#8220;a javascript implementation of the W3C DOM&#8221;</a>.
+</p>
+
+<h2>jQuery and jsdom</h2>
+<p>
+Using jsdom you can specify a local file, or url, and jsdom will return the <code>window</code> object for that document. Additionally, JavaScript can be inserted into the document; in our case we&#8217;re inserting the jQuery library. In the example below all the links from the Hacker News front page are logged to the console.
+</p>
+
+<figure class='code'><figcaption><span>Scraping Links From Hacker News</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">jsdom</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;jsdom&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">fs</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">jquery</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">&quot;./jquery-1.7.1.min.js&quot;</span><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">jsdom</span><span class="p">.</span><span class="nx">env</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">html</span><span class="o">:</span> <span class="s1">&#39;http://news.ycombinator.com/&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">src</span><span class="o">:</span> <span class="p">[</span>
+</span><span class='line'>    <span class="nx">jquery</span>
+</span><span class='line'>  <span class="p">],</span>
+</span><span class='line'>  <span class="nx">done</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">errors</span><span class="p">,</span> <span class="nb">window</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">$</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">$</span><span class="p">;</span>
+</span><span class='line'>    <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">)</span> <span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>Making Scraping More Robust</h2>
+<p>
+  Unfortunately there are few common bugs that I ran into when scraping content with jQuery and jsdom. Specifically there are two issues, that aren&#8217;t necessarily specific to jsdom, that are worth watching out for. 
+</p>
+
+<h3>jQuery Return Values</h3>
+<p>
+  The first issue are return values from jQuery function calls. Extra attention has to be paid to return values. Applying a method to <code>undefined</code> will crash a program, a problem that can be especially apparent in DOM parsing. Consider the example below:
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)[</span><span class="mi">7</span><span class="p">]).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  If there are 8, or more, links on a page the 8th link will be returned and its href attribute will be split into an array. However, if there are less than 8 the <code>attr('href')</code> will return <code>undefined</code> and calling <code>split()</code> on it will crash the program. Since HTML pages aren&#8217;t as structured as API responses, its important not to assume too much and always check return values.
+</p>
+
+<h3>Web Page Errors</h3>
+<p>
+  It&#8217;s entirely possible that the url passed to jsdom returns an error. If the error is temporary, your scraper might miss out on important information. This issue can be mitigated by recursively retrying the url, like the example below:
+</p>
+
+<figure class='code'><figcaption><span>Managing Errors</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">getLinks</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">retries</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="nx">retries</span> <span class="o">===</span> <span class="mi">3</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span><span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">retries</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">retries</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">jsdom</span><span class="p">.</span><span class="nx">env</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">html</span><span class="o">:</span> <span class="s1">&#39;http://news.ycombinator.com/&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">src</span><span class="o">:</span> <span class="p">[</span>
+</span><span class='line'>      <span class="nx">jquery</span>
+</span><span class='line'>    <span class="p">],</span>
+</span><span class='line'>    <span class="nx">done</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">errors</span><span class="p">,</span> <span class="nb">window</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">errors</span><span class="p">){</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nx">getLinks</span><span class="p">(</span><span class="nx">retries</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="kd">var</span> <span class="nx">$</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">$</span><span class="p">;</span>
+</span><span class='line'>      <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">).</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">)</span> <span class="p">);</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+With the above approach, if errors are encountered <code>getLinks</code> will be called recursively with a larger <code>retries</code> value. On the 3rd retry the function will return. If you wanted to go further you could wrap the recursive call in <code>setTimeout</code> to ensure that the recursive web request was not made immediately after the error was encountered.
+</p>
+
+<h2>Conclusions</h2>
+<p>
+  Parsing web pages with jQuery on the server is a much more natural experience for developers already accustomed to using jQuery in the client. However, prior to scraping it&#8217;s worth checking if the site 1) allows scraping and 2) does not already have an API. Consuming a JSON API would be even easy than scraping and parsing!
+</p></div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1711,6 +1872,10 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/02/08/three-important-conversion-metrics-you-should-watch/">Three Important Conversion Metrics You Should Watch</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/01/30/are-you-ready-to-launch/">Are You Ready To Launch?</a>
       </li>
     
@@ -1724,10 +1889,6 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
     
       <li class="post">
         <a href="/blog/2012/11/09/stripe-would-be-perfect-if/">Stripe Would Be Perfect If&#8230;</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/09/09/common-javascript-errors/">Common JavaScript Errors</a>
       </li>
     
   </ul>
