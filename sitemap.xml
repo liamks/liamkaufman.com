@@ -42,7 +42,7 @@
         <loc>
             http://liamkaufman.com/blog/2012/02/25/adding_real-time_to_rails_with_socket.IO_nodejs_and_backbonejs_with_demo/
         </loc>
-        <lastmod>2012-04-21T13:24:23-04:00</lastmod>
+        <lastmod>2013-02-27T08:35:52-05:00</lastmod>
     </url>
     <url>
         <loc>http://liamkaufman.com/blog/2012/03/01/why-riak-and-nodejs-make-a-great-pair/</loc>
@@ -107,16 +107,20 @@
         <lastmod>2013-02-08T12:36:19-05:00</lastmod>
     </url>
     <url>
+        <loc>http://liamkaufman.com/blog/2013/02/27/adding-real-time-to-a-restful-rails-app/</loc>
+        <lastmod>2013-02-27T08:32:54-05:00</lastmod>
+    </url>
+    <url>
         <loc>http://liamkaufman.com/about.html</loc>
         <lastmod>2012-09-09T13:55:29-04:00</lastmod>
     </url>
     <url>
         <loc>http://liamkaufman.com/blog/archives/</loc>
-        <lastmod>2013-02-08T12:36:19-05:00</lastmod>
+        <lastmod>2013-02-27T08:35:52-05:00</lastmod>
     </url>
     <url>
         <loc>http://liamkaufman.com/</loc>
-        <lastmod>2013-02-08T12:36:19-05:00</lastmod>
+        <lastmod>2013-02-27T08:35:52-05:00</lastmod>
     </url>
     <url>
         <loc>http://liamkaufman.com/projects.html</loc>

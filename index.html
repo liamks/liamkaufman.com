@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="You’ve created an app that your beta testers use and your launch was a huge success. Every day the number of registered users increases and you feel &hellip;">
+  <meta name="description" content="After rewriting Understoodit several times I’ve spent a lot of time thinking about building real-time web applications. While I elected to rewrite &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,281 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/02/27/adding-real-time-to-a-restful-rails-app/">Adding Real-Time to a RESTful Rails App</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-27T00:00:00-05:00" pubdate data-updated="true">Feb 27<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+  After rewriting <a href="http://understoodit.com">Understoodit</a> several times I’ve spent a lot of time thinking about building real-time web applications. While I elected to rewrite 100% of Understoodit in Node, there are many existing Rails and Sinatra applications that can’t be completely rewritten, but could still benefit with the addition of real-time updates. The tutorial below starts with a traditional web-app written in Backbone and Ruby on Rails (RoR). Of course the modifications could easily be applied to any (Backbone|Angular|Ember) and (Rails|Sinatra|Django|Pylons) app.
+</p>
+<p>
+  Between the overview below, and the <a href="https://github.com/liamks/rails-realtime">code on GitHub</a>, you should be able to follow along and, in less than 50 lines of code, add real-time updates to your Rails app.
+</p>
+<p>
+<a class="github" href="https://github.com/liamks/rails-realtime"><span></span>Adding Real-Time on Github</a>
+</p>
+<h2>Starting Point</h2>
+<p>
+In a traditional web app if a user creates a new model other users must refresh their page to see that content. Alternatively, you could poll the server every 30 second and refetch all the content. With both approaches you end up fetching all the content, and in the first case the markup as well. 
+</p>
+
+<p>
+<img class="center" src="/images/rails-realtime-rest.png" alt="Traditional RESTful Rails app">
+</p>
+
+<p>
+In Figure 1, User 1 creates a new book, but User 2 will not see that new book unless they refresh their page. 
+</p>
+
+<h2>Adding Real-Time With Redis And Socket.IO</h2>
+<p>
+When User 1 creates a new book, we’d like that new book to be pushed to User 2 in real-time. I’m going to cover one method that requires only a few modifications to your existing app and uses Redis, Node and Socket.IO. 
+</p>
+
+<h2>How It Will Work</h2>
+
+<img class="center" src="/images/rails-realtime-with-rt.png" alt="Traditional RESTful Rails app with Real-Time">
+<ol>
+  <li>When User 1 creates a new book, an &#8220;after_create&#8221; callback publishes that new book to Redis on the &#8220;rt-change&#8221; channel.</li>
+  <li>On the Node server, each client subscribing to &#8220;rt-change&#8221; receives that new book.</li>
+  <li>The new book is pushed to the client using Socket.IO.</li>
+  <li>Within the browser, Socket.IO receives that new book and &#8220;publishes&#8221; that change to our Backbone.js App.</li>
+  <li>The Backbone.js books collection, listening for changes to books, adds the new book to itself.</li>
+</ol>
+
+<p>
+The advantage of this approach is that it only requires tiny modifications to a Rails&#8217; model, and if your Node server crashes, your application will work as it always has (without real-time). Thus, I’d consider this a real-time enhancement that gracefully degrades to a conventional Rails RESTful web app.
+</p>
+
+<h2>Socket.IO Connection</h2>
+<p>
+  First, ensure that <code>socket.io.js</code> has been added to <code>lib/assets/javascripts</code>, and referenced in app/assets/javascripts/application.js. In the web app create a new module, called realtime, that includes the Socket.IO connection code. When the application initializes it calls <code>app.realtime.connect()</code> to setup the Socket.IO connection.
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nb">window</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">realtime</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">connect</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>    <span class="nb">window</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">socket</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s2">&quot;http://0.0.0.0:5001&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nb">window</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;rt-change&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">){</span>
+</span><span class='line'>      <span class="c1">// publish the change on the client side, the channel == the resource</span>
+</span><span class='line'>      <span class="nb">window</span><span class="p">.</span><span class="nx">app</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">resource</span><span class="p">,</span> <span class="nx">message</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>Node Server &amp; Pub/Sub</h2>
+<p>
+  In the root of the Rails app create a new folder called &#8216;realtime&#8217;, where the Node server will reside. Don&#8217;t forget to create a <code>package.json</code> file and include socket.io, and redis in the dependencies. Finally, remember to run <code>npm install</code>.
+</p>
+
+<figure class='code'><figcaption><span>realtime/realtime-server.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io&#39;</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">5001</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;redis&#39;</span><span class="p">).</span><span class="nx">createClient</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">redis</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(</span><span class="s1">&#39;rt-change&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">io</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">socket</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">redis</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">channel</span><span class="p">,</span> <span class="nx">message</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;rt-change&#39;</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">message</span><span class="p">));</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>Rails Models</h2>
+<p>
+  Assuming you have Redis installed, add redis to your Gemfile. Next, create a file called <code>redis.rb</code> in your initializers with the following content:
+</p>
+<figure class='code'><figcaption><span>config/initializers/redis.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1">#make sure redis has been added to your Gemfile</span>
+</span><span class='line'><span class="vg">$redis</span> <span class="o">=</span> <span class="no">Redis</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:host</span> <span class="o">=&gt;</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="ss">:port</span><span class="o">=&gt;</span> <span class="mi">6379</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  The Rails app now has access to Redis through the <code>$redis</code> global variable. Below, we publish changes to Redis whenever a model is created, updated or destroyed. Changes are published to &#8220;rt-change&#8221;, which our Node.js connections are listening to (see above).
+</p>
+<figure class='code'><figcaption><span>app/models/book.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Book</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">attr_accessible</span> <span class="ss">:num_pages</span><span class="p">,</span> <span class="ss">:title</span>
+</span><span class='line'>  <span class="n">after_create</span> <span class="p">{</span><span class="o">|</span><span class="n">book</span><span class="o">|</span> <span class="n">book</span><span class="o">.</span><span class="n">message</span> <span class="s1">&#39;create&#39;</span> <span class="p">}</span>
+</span><span class='line'>  <span class="n">after_update</span> <span class="p">{</span><span class="o">|</span><span class="n">book</span><span class="o">|</span> <span class="n">book</span><span class="o">.</span><span class="n">message</span> <span class="s1">&#39;update&#39;</span> <span class="p">}</span>
+</span><span class='line'>  <span class="n">after_destroy</span> <span class="p">{</span><span class="o">|</span><span class="n">book</span><span class="o">|</span> <span class="n">book</span><span class="o">.</span><span class="n">message</span> <span class="s1">&#39;destroy&#39;</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">message</span> <span class="n">action</span>
+</span><span class='line'>    <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span> <span class="n">resource</span><span class="p">:</span> <span class="s1">&#39;books&#39;</span><span class="p">,</span>
+</span><span class='line'>            <span class="n">action</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
+</span><span class='line'>            <span class="nb">id</span><span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+</span><span class='line'>            <span class="n">obj</span><span class="p">:</span> <span class="nb">self</span> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="vg">$redis</span><span class="o">.</span><span class="n">publish</span> <span class="s1">&#39;rt-change&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">to_json</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Listen For Changes in The Backbone App</h2>
+<p>
+  In the Books Collection, we add the code to both listen for &#8216;books&#8217; events and the handler to handle those events. For create, we simply add the new object (obj) to the collection. For update we update the existing model, while for destroy we remove the object from the collection.
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">collections</span><span class="p">.</span><span class="nx">Books</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">model</span> <span class="o">:</span> <span class="nx">app</span><span class="p">.</span><span class="nx">models</span><span class="p">.</span><span class="nx">Book</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">url</span> <span class="o">:</span> <span class="s1">&#39;/books&#39;</span><span class="p">,</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>    <span class="nx">app</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;books&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">handle_change</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">handle_change</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">){</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">model</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">switch</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">action</span><span class="p">){</span>
+</span><span class='line'>      <span class="k">case</span> <span class="s1">&#39;create&#39;</span><span class="o">:</span>
+</span><span class='line'>        <span class="k">this</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">obj</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">case</span> <span class="s1">&#39;update&#39;</span><span class="o">:</span>
+</span><span class='line'>        <span class="nx">model</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+</span><span class='line'>        <span class="nx">model</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">obj</span><span class="p">);</span>
+</span><span class='line'>        <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">case</span> <span class="s1">&#39;destroy&#39;</span><span class="o">:</span>
+</span><span class='line'>        <span class="k">this</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">obj</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<h2>Caveats</h2>
+<p>
+  In production there are many edge cases to consider. For instance, if someone views your app on their mobile phone and then puts the phone in their pocket, the screen saver goes on and Socket.IO will disconnect. When the user takes the phone out of their pocket, and views the app, Socket.IO will reconnect. However, during the period of disconnection the data in the client-side app may have become out-of-date. An easy fix is just to fetch the data on reconnect. With lots of connections, or lots of data, fetching everything becomes problematic and requires a more clever method for fetching data (e.g. just fetch the new, or changed, data).
+</p>
+<p>
+  Another issue is if two people are editing the same item, and if person 1 clicks save that will replace what person 2 is editing. To solve this you can present person 2 with a message saying that the book they are editing has been updated by someone else and prevent the version of the book they are editing from being replaced. This isn&#8217;t an ideal solution, but would be fine if the chances of two people editing the same model were minimal. 
+</p>
+<p>
+  In the code above there is only one channel &#8216;rt-change&#8217;, meaning every connected client will get every real-time change. You may want to scope your channels by user (e.g. rt-change/[USERID]). Furthermore, you&#8217;d want to create one redis client for every Socket.IO connection (currently there&#8217;s one redis client for all connections). In other words the <code>.createClient()</code>, and <code>redis.subscribe('...')</code>, would have to take place within the Socket.IO &#8216;connection&#8217; callback (after line 6 above).
+</p>
+
+<h2>Alternatives To The Above</h2>
+<h3>SockJS</h3>
+<p>
+  Socket.IO could be swapped for <a href="https://github.com/sockjs/sockjs-client">SockJS</a>, which uses a similar API to websockets. I&#8217;ve heard from several individuals that it&#8217;s significantly more stable than the current version of Socket.IO and it&#8217;s currently <a href="https://github.com/meteor/meteor/tree/master/packages/stream">used by Meteor</a>.
+</p>
+
+<h3>Engine.IO</h3>
+<p>
+  Guillermo Rauch, the creator of Socket.IO, has publically stated that Socket.IO&#8217;s approach of starting with websockets and falling back to polling <a href="http://www.devthought.com/2012/07/07/the-realtime-engine/">creates issues</a>. As result, he&#8217;s been working on Engine.IO, which will power Socket.IO version 1.0, and should provide a much more stable experience. I suspect Socket.IO, v1.0, will be released in the next few months.
+</p>
+
+<h3>Rails 4.0</h3>
+<p>
+  Rails 4.0, <a href="http://weblog.rubyonrails.org/2013/2/25/Rails-4-0-beta1/">which is due to be released soon</a>, will include <a href="http://tenderlovemaking.com/2012/07/30/is-it-live.html">streaming</a>. Using a combination of Rails 4 streaming, and Puma, you could potentially remove Node and Socket.IO, and use Rails for real-time. Of course, you&#8217;d have to take care of some of what Socket.IO does such as reconnects and heart-beats.
+</p>
+
+<h3>RabbitMQ/ZeroMQ</h3>
+<p>
+  Redis&#8217; Pub/Sub functionality could be replaced by either RabbitMQ or ZeroMQ. I ended up using Redis, since I was using it for caching, and it has an extremely simple API for pub/sub. While RabbitMQ and ZeroMQ appear more complex, they do offer many more features for messaging.
+</p>
+
+<h3>Commercial Options</h3>
+<p>
+  If you&#8217;re not keen on tinkering with Node, or waiting for Rails 4, there are commercial options such as <a href="http://pusher.com/">Pusher</a> and <a href="http://www.pubnub.com/">PubNub</a>, that deal with real-time connections for you. While both options can be pricey, especially with many concurrent connections, they do save you the hassle of building the infrastructure yourself.
+</p>
+
+<h2>Conclusions</h2>
+<p>
+  Adding real-time updates to your Ruby on Rails RESTful app has never been easier. Over the next few months Rails 4, or Socket.IO v1.0, will make the process even more painless. As Google&#8217;s services make users more accustomed to real-time updates, it becomes even more important to provide a similar experience in your webapps. 
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/rails-realtime"><span></span>Adding Real-Time on Github</a>
+</p></div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1184,81 +1459,6 @@ Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/03/22/from-digg-to-reddit-to-hacker-news-whats-next/">From Digg to Reddit to Hacker News: What&#8217;s Next?</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-03-22T00:00:00-04:00" pubdate data-updated="true">Mar 22<span>nd</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-Dustin Curtis, the creator of <a href="http://svbtle.com/">Svbtle</a>, recently mentioned on <a href="https://twitter.com/#!/dcurtis/status/182986897444966402">Twitter</a>:
-</p>
-<blockquote>
-I miss the Hacker News from four years ago. It was awesome. The discussions there are not even worth reading anymore. It&#8217;s sad.
-</blockquote>
-<p>
- Based on the number of retweets and favorites, I suspect that others agree. In fact the idea that Hacker News is degrading is common enough that it has been addressed on <a href="http://ycombinator.com/newsguidelines.html">HN’s guidelines</a>: 
-</p>
-<blockquote>
- If your account is less than a year old, please don&#8217;t submit comments saying that HN is turning into Reddit. (It&#8217;s a common semi-noob illusion.).
-</blockquote>
-<p>
-  However, Mr Curtis has been on HN for <a href="http://news.ycombinator.com/user?id=dcurtis">over five years</a>, and is certainly not subject to the &#8216;common semi-noob illusion&#8217;. Is HN getting worse then?
-</p>
-
-<p>
-I suspect that when HN started only those that were most passionate about hacking were familiar with HN and would take the time to comment on it. As time went on the popularity of both Y Combinator and HN may have resulted in the level of discourse regressing to the mean. That&#8217;s not to say that there aren&#8217;t still intelligent comments, in fact I&#8217;d argue that there are more intelligent comments than there were 4 or 5 years ago. However, people tend to remember the unintelligent comments more, especially when those comments contain opinions that differ from their own or originate from non-experts.
-</p>
-
-<p>
-If Digg, Reddit and Hacker News are no longer the best places for discussion how can we create a place that is? While there ought to be many ways to encourage scholarly discussion, and discourage idiotic comments, I want to explore several ideas.
-</p>
-
-<h2>Exclusivity</h2>
-<p>
-In the early stages Digg, Reddit and Hacker News were implicitly exclusive. They didn’t discourage people from joining, but their initial lack of popularity acted as a filter to those who were technically savvy and within certain social networks. Once the exclusivity vanished the communities became diluted. <a href="http://forrst.com">Forrst</a> is explicitly exclusive and is by invitation only. Does Forrst&#8217;s exclusivity lead to a stronger community? To reiterate, is exclusivity a necessity in keeping a social news site strong and viable?
-</p>
-<h2>Experts</h2>
-<p>
-I enjoy when an article pops up on HN about physics or biology and several graduate students in those fields provide intelligent comments. Is there a way to officially denote that someone is an expert in a field and automatically give their comments more weight? In very esoteric subjects it isn&#8217;t necessary, the complexity of the subject reduces &#8220;average&#8221; comments. However, in simpler subjects, <a href="http://en.wikipedia.org/wiki/Parkinson's_Law_of_Triviality">bikeshedding</a> becomes an issue. Could bikeshedding be prevented by weighting comments based on the user&#8217;s past comments? For instance, if an individual has been voted up when discussing physics, perhaps future comments on physics should be algorithmically voted up.
-</p>
-
-<h2>Focus</h2>
-<p>
-One thing I really appreciate about HN is the variety of content. However, I can’t help but wonder if a social news site restricted the content to just a specific topic if that would both decrease the probability that the content, and discussion, become watered down? Forrst focuses on design and development, has their focus helped them? Reddit has addressed this issue with subreddits, but the result seems to be many hardly used subreddits. I think focus is important, but at the same time I like being exposed to new topics, can the those two wishes be balanced?
-</p>
-<h2>Conclusions</h2>
-<p>
-There is no magic bullet for maintaining the quality of a social news site, but there are a collection of concepts that may help. It would be interesting to A/B test some of those ideas. One could imagine creating several social news websites for different topics and making some exclusive and some not, or altering other variables and see which succeed. What do you think is important in a social news site?
-</p></div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1281,6 +1481,10 @@ There is no magic bullet for maintaining the quality of a social news site, but 
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/02/27/adding-real-time-to-a-restful-rails-app/">Adding Real-Time To A RESTful Rails App</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/02/08/three-important-conversion-metrics-you-should-watch/">Three Important Conversion Metrics You Should Watch</a>
       </li>
     
@@ -1294,10 +1498,6 @@ There is no magic bullet for maintaining the quality of a social news site, but 
     
       <li class="post">
         <a href="/blog/2012/11/21/why-you-should-be-nice-to-your-customers/">Why You Should Be Nice To Your Customers</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/11/09/stripe-would-be-perfect-if/">Stripe Would Be Perfect If&#8230;</a>
       </li>
     
   </ul>
