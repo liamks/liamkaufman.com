@@ -8,6 +8,9 @@ comments: true
   <a href="http://node-chatty.herokuapp.com/chatty" target="_blank"><img src="/images/chatty-screen.png"></a>
 </p>
 <p>
+  UPDATE: see my <a href="/blog/2013/02/27/adding-real-time-to-a-restful-rails-app/">new article on adding real-time to your Rails application</a>.
+</p>
+<p>
   Despite the <a href="http://gilesbowkett.blogspot.in/2012/02/rails-went-off-rails-why-im-rebuilding.html">recent distaste for Rails</a>, I still think its a nice framework for developing websites (e.g. devise &amp; active record). However, if you want real-time communication Socket.IO and Node.js seem to be the best options. If you already have an existing Rails application porting the entire application to Node.js is likely not on option. Fortunately, it is relatively easy to use Rails to serve your client-side Socket.IO web application, while Node.js and Socket.IO are used for real-time communication. The primary goal of this article is to show one method of integrating a real-time application, that is slightly more complex than a todo app, with Rails. Thus, I created Chatty, a simple chat room web application that allows a user to see all the messages in the chat room, or filter the messages by user. <a href="http://twitter.github.com/bootstrap/index.html">Twitter's Bootstrap</a> was used for the CSS and modal dialogue. 
 </p>
 <p>
