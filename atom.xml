@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-02-27T08:36:05-05:00</updated>
+  <updated>2013-05-17T08:33:28-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -12,6 +12,180 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Understanding AngularJS Directives Part 1: ng-repeat and compile]]></title>
+    <link href="http://liamkaufman.com/blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/"/>
+    <updated>2013-05-13T00:00:00-04:00</updated>
+    <id>http://liamkaufman.com/blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile</id>
+    <content type="html"><![CDATA[<p>
+  My first impression of Angular.js was one of amazement. A small amount of code could do a lot. My worry with Angular, and other magical frameworks, is that initially you are productive, but eventually you hit a dead end requiring full understanding of how the magic works. In my quest to master Angular.js, I wanted to learn everything about creating custom directives - a goal that I’d hope would ameliorate the learning curve. <a href="http://www.egghead.io/">Egghead.io</a> does a good job exploring basic, and intermediate, examples of custome directives but it still wasn’t clear when to use the compile parameter in a custome directive. 
+</p>
+<p>
+  Miško Hevery, the creator of AngularJS, <a href="http://blog.angularjs.org/2012/11/about-those-directives.html">gave a talk about directives and explained</a> that compile is rarely needed for custom directives, and it is only required for directives like <code>ng-repeat</code> and <code>ng-view</code>. So the next question: how does <code>ng-repeat</code> work?
+</p>
+
+<h2>How does ng-repeat work?</h2>
+<p>
+  In my quest to understand the compile function, I started examining ng-repeat. Reading the source code was difficult until I walked through an example using the Chrome debugger. After stepping through <code>ng-repeat</code> it became clear that most of its 150 lines of code are related to optimizing, error handling and handling objects or arrays. In order to really understand ng-repeat, and specifically compile, I set out to implement my own version of ng-repeat, which I will call <code>lk-repeat</code>, with just the bare minimum of code. When possible I tried to use the same variable names that ng-repeat uses, and I also used their regular expression for matching passed in attributes.
+</p>
+
+<h2>Transclusion</h2>
+<p>
+  Before going further it&#8217;s important to review the transclude option. Transclude has two options: 1) <code>true</code> or 2) <code>'element'</code>. First let&#8217;s examine <code>transclude : true</code>.
+</p>
+
+
+<figure class='code'><figcaption><span>DIV using the person directive</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;div</span> <span class="na">person</span><span class="nt">&gt;</span>Ted<span class="nt">&lt;/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>Defining the person directive</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">directive</span><span class="p">(</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">transclude</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;&lt;h1&gt;A Person&lt;/h1&gt;&lt;div ng-transclude&gt;&lt;/div&gt;&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">link</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$element</span><span class="p">,</span> <span class="nx">$attr</span><span class="p">){</span>
+</span><span class='line'>      <span class="c1">// some code</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>Result</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h1&gt;</span>A Person<span class="nt">&lt;/h1&gt;&lt;div</span> <span class="na">ng-transclude</span><span class="nt">&gt;&lt;div</span> <span class="na">person</span><span class="nt">&gt;</span>Ted<span class="nt">&lt;/div&gt;&lt;/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  In the above example <code>transclude : true</code> tells Angular to take the contents of the DOM element, using this directive, and insert them into the person&#8217;s template. To specify where in the template the HTML will be transcluded include <code>ng-transclude</code> in the template.
+</p>
+
+<p>
+  In contrast to the above example, <code>ng-repeat</code>, does not have a template, and transcludes the element that calls <code>ng-repeat</code>. Hence, <code>ng-repeat</code> calls <code>transclude : 'element'</code>, to denote that the DOM element that called <code>ng-repeat</code> will be used for transclusion.
+</p>
+
+<h2>lk-repeat</h2>
+<p>Below <code>lk-repeat</code> is used the same way <code>ng-repeat</code> would be used.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;ul&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;li</span> <span class="na">lk-repeat=</span><span class="s">&quot;name in names&quot;</span><span class="nt">&gt;</span><span class="nt">&lt;/li&gt;</span>
+</span><span class='line'><span class="nt">&lt;/ul&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">,[]);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">directive</span><span class="p">(</span><span class="s1">&#39;lk-repeat&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">transclude</span> <span class="o">:</span> <span class="s1">&#39;element&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">compile</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nx">attr</span><span class="p">,</span> <span class="nx">linker</span><span class="p">){</span>
+</span><span class='line'>      <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$element</span><span class="p">,</span> <span class="nx">$attr</span><span class="p">){</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">myLoop</span> <span class="o">=</span> <span class="nx">$attr</span><span class="p">.</span><span class="nx">myLoop</span><span class="p">,</span>
+</span><span class='line'>            <span class="nx">match</span> <span class="o">=</span> <span class="nx">myLoop</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/</span><span class="p">),</span>
+</span><span class='line'>            <span class="nx">indexString</span> <span class="o">=</span> <span class="nx">match</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span><span class='line'>            <span class="nx">collectionString</span> <span class="o">=</span> <span class="nx">match</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span class='line'>            <span class="nx">parent</span> <span class="o">=</span> <span class="nx">$element</span><span class="p">.</span><span class="nx">parent</span><span class="p">(),</span>
+</span><span class='line'>            <span class="nx">elements</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// $watchCollection is called everytime the collection is modified</span>
+</span><span class='line'>        <span class="nx">$scope</span><span class="p">.</span><span class="nx">$watchCollection</span><span class="p">(</span><span class="nx">collectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">collection</span><span class="p">){</span>
+</span><span class='line'>          <span class="kd">var</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">block</span><span class="p">,</span> <span class="nx">childScope</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="c1">// check if elements have already been rendered</span>
+</span><span class='line'>          <span class="k">if</span><span class="p">(</span><span class="nx">elements</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+</span><span class='line'>            <span class="c1">// if so remove them from DOM, and destroy their scope</span>
+</span><span class='line'>            <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">elements</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="nx">elements</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">el</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
+</span><span class='line'>              <span class="nx">elements</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">scope</span><span class="p">.</span><span class="nx">$destroy</span><span class="p">();</span>
+</span><span class='line'>            <span class="p">};</span>
+</span><span class='line'>            <span class="nx">elements</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">collection</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="c1">// create a new scope for every element in the collection.</span>
+</span><span class='line'>            <span class="nx">childScope</span> <span class="o">=</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>
+</span><span class='line'>            <span class="c1">// pass the current element of the collection into that scope</span>
+</span><span class='line'>            <span class="nx">childScope</span><span class="p">[</span><span class="nx">indexString</span><span class="p">]</span> <span class="o">=</span> <span class="nx">collection</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nx">linker</span><span class="p">(</span><span class="nx">childScope</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">clone</span><span class="p">){</span>
+</span><span class='line'>              <span class="c1">// clone the transcluded element, passing in the new scope.</span>
+</span><span class='line'>              <span class="nx">parent</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">clone</span><span class="p">);</span> <span class="c1">// add to DOM</span>
+</span><span class='line'>              <span class="nx">block</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>              <span class="nx">block</span><span class="p">.</span><span class="nx">el</span> <span class="o">=</span> <span class="nx">clone</span><span class="p">;</span>
+</span><span class='line'>              <span class="nx">block</span><span class="p">.</span><span class="nx">scope</span> <span class="o">=</span> <span class="nx">childScope</span><span class="p">;</span>
+</span><span class='line'>              <span class="nx">elements</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">block</span><span class="p">);</span>
+</span><span class='line'>            <span class="p">});</span>
+</span><span class='line'>          <span class="p">};</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  Above you&#8217;ll note that I&#8217;m removing all the elements from the DOM, and their scope, every time the collection updates. While this makes the code easier to understand, it is extremely inefficient having to remove everything then add it again. In the real version of <code>ng-repeat</code>, only elements that are removed from the collection, are removed from the DOM. Furthermore, if an item moves within the collection (e.g. 2nd to 4th place) it doesn&#8217;t need a new scope, but it needs to be moved in the DOM. Reading <code>ng-repeat</code>&#8217;s code gives me confidence that the team behind AngularJS has created a good, well tested and efficient framework.
+</p>
+<p>
+  In part 2 I plan on exploring another directive. If you have any recommendations let me know below, or via twitter.
+</p>]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Adding Real-Time To A RESTful Rails App]]></title>
@@ -2629,19 +2803,6 @@ While completing those six goals I plan on weaving what I’ve learning into pro
 
 <p>
 Is this the best way of accomplishing my goal of mastering JS? Discuss on <a href="http://news.ycombinator.com/item?id=2979582">Hacker News.</a>
-</p>]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Liamkaufman.com gets a new look]]></title>
-    <link href="http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look/"/>
-    <updated>2011-08-23T00:00:00-04:00</updated>
-    <id>http://liamkaufman.com/blog/2011/08/23/liamkaufmancom-gets-a-new-look</id>
-    <content type="html"><![CDATA[<p>
-After 3 years without change, I&#8217;ve redone my personal website using Jekyll and Bootstrap. The previous version of liamkaufman.com was hosted on Google App Engine and consisted of a very basic CMS that I made before I knew what I was doing. I was both unhappy with the look of the site, and the code behind it. At the same time I was interested in using Jekyll, as I wanted to avoid the hassles associated with database backed sites. I also appreciate the fact that my site, and it’s content are easy to deploy and update via Github. 
-</p>
-<p>
-Overall the process of learning Jekyll and Bootstrap was much easier than anticipated. To learn Jekyll I examined the <a href="https://github.com/schacon/schacon.github.com">source code</a> behind <a href="http://schacon.github.com/">Scott Chacon’s blog</a>. Learning Bootstrap consisted of referencing CSS classes in my DOM and referencing the Bootstrap CSS file itself: not much to it.
 </p>]]></content>
   </entry>
   

@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="After rewriting Understoodit several times I’ve spent a lot of time thinking about building real-time web applications. While I elected to rewrite &hellip;">
+  <meta name="description" content="My first impression of Angular.js was one of amazement. A small amount of code could do a lot. My worry with Angular, and other magical frameworks, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,207 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">Understanding AngularJS Directives Part 1: Ng-repeat and Compile</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-13T00:00:00-04:00" pubdate data-updated="true">May 13<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+  My first impression of Angular.js was one of amazement. A small amount of code could do a lot. My worry with Angular, and other magical frameworks, is that initially you are productive, but eventually you hit a dead end requiring full understanding of how the magic works. In my quest to master Angular.js, I wanted to learn everything about creating custom directives - a goal that I’d hope would ameliorate the learning curve. <a href="http://www.egghead.io/">Egghead.io</a> does a good job exploring basic, and intermediate, examples of custome directives but it still wasn’t clear when to use the compile parameter in a custome directive. 
+</p>
+<p>
+  Miško Hevery, the creator of AngularJS, <a href="http://blog.angularjs.org/2012/11/about-those-directives.html">gave a talk about directives and explained</a> that compile is rarely needed for custom directives, and it is only required for directives like <code>ng-repeat</code> and <code>ng-view</code>. So the next question: how does <code>ng-repeat</code> work?
+</p>
+
+<h2>How does ng-repeat work?</h2>
+<p>
+  In my quest to understand the compile function, I started examining ng-repeat. Reading the source code was difficult until I walked through an example using the Chrome debugger. After stepping through <code>ng-repeat</code> it became clear that most of its 150 lines of code are related to optimizing, error handling and handling objects or arrays. In order to really understand ng-repeat, and specifically compile, I set out to implement my own version of ng-repeat, which I will call <code>lk-repeat</code>, with just the bare minimum of code. When possible I tried to use the same variable names that ng-repeat uses, and I also used their regular expression for matching passed in attributes.
+</p>
+
+<h2>Transclusion</h2>
+<p>
+  Before going further it&#8217;s important to review the transclude option. Transclude has two options: 1) <code>true</code> or 2) <code>'element'</code>. First let&#8217;s examine <code>transclude : true</code>.
+</p>
+
+
+<figure class='code'><figcaption><span>DIV using the person directive</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;div</span> <span class="na">person</span><span class="nt">&gt;</span>Ted<span class="nt">&lt;/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>Defining the person directive</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">directive</span><span class="p">(</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">transclude</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;&lt;h1&gt;A Person&lt;/h1&gt;&lt;div ng-transclude&gt;&lt;/div&gt;&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">link</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$element</span><span class="p">,</span> <span class="nx">$attr</span><span class="p">){</span>
+</span><span class='line'>      <span class="c1">// some code</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>Result</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h1&gt;</span>A Person<span class="nt">&lt;/h1&gt;&lt;div</span> <span class="na">ng-transclude</span><span class="nt">&gt;&lt;div</span> <span class="na">person</span><span class="nt">&gt;</span>Ted<span class="nt">&lt;/div&gt;&lt;/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  In the above example <code>transclude : true</code> tells Angular to take the contents of the DOM element, using this directive, and insert them into the person&#8217;s template. To specify where in the template the HTML will be transcluded include <code>ng-transclude</code> in the template.
+</p>
+
+<p>
+  In contrast to the above example, <code>ng-repeat</code>, does not have a template, and transcludes the element that calls <code>ng-repeat</code>. Hence, <code>ng-repeat</code> calls <code>transclude : 'element'</code>, to denote that the DOM element that called <code>ng-repeat</code> will be used for transclusion.
+</p>
+
+<h2>lk-repeat</h2>
+<p>Below <code>lk-repeat</code> is used the same way <code>ng-repeat</code> would be used.</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;ul&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;li</span> <span class="na">lk-repeat=</span><span class="s">&quot;name in names&quot;</span><span class="nt">&gt;</span><span class="nt">&lt;/li&gt;</span>
+</span><span class='line'><span class="nt">&lt;/ul&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">,[]);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">directive</span><span class="p">(</span><span class="s1">&#39;lk-repeat&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">transclude</span> <span class="o">:</span> <span class="s1">&#39;element&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">compile</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nx">attr</span><span class="p">,</span> <span class="nx">linker</span><span class="p">){</span>
+</span><span class='line'>      <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$element</span><span class="p">,</span> <span class="nx">$attr</span><span class="p">){</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">myLoop</span> <span class="o">=</span> <span class="nx">$attr</span><span class="p">.</span><span class="nx">myLoop</span><span class="p">,</span>
+</span><span class='line'>            <span class="nx">match</span> <span class="o">=</span> <span class="nx">myLoop</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/</span><span class="p">),</span>
+</span><span class='line'>            <span class="nx">indexString</span> <span class="o">=</span> <span class="nx">match</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span><span class='line'>            <span class="nx">collectionString</span> <span class="o">=</span> <span class="nx">match</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span class='line'>            <span class="nx">parent</span> <span class="o">=</span> <span class="nx">$element</span><span class="p">.</span><span class="nx">parent</span><span class="p">(),</span>
+</span><span class='line'>            <span class="nx">elements</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// $watchCollection is called everytime the collection is modified</span>
+</span><span class='line'>        <span class="nx">$scope</span><span class="p">.</span><span class="nx">$watchCollection</span><span class="p">(</span><span class="nx">collectionString</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">collection</span><span class="p">){</span>
+</span><span class='line'>          <span class="kd">var</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">block</span><span class="p">,</span> <span class="nx">childScope</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="c1">// check if elements have already been rendered</span>
+</span><span class='line'>          <span class="k">if</span><span class="p">(</span><span class="nx">elements</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+</span><span class='line'>            <span class="c1">// if so remove them from DOM, and destroy their scope</span>
+</span><span class='line'>            <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">elements</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="nx">elements</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">el</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
+</span><span class='line'>              <span class="nx">elements</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">scope</span><span class="p">.</span><span class="nx">$destroy</span><span class="p">();</span>
+</span><span class='line'>            <span class="p">};</span>
+</span><span class='line'>            <span class="nx">elements</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">collection</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="c1">// create a new scope for every element in the collection.</span>
+</span><span class='line'>            <span class="nx">childScope</span> <span class="o">=</span> <span class="nx">$scope</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>
+</span><span class='line'>            <span class="c1">// pass the current element of the collection into that scope</span>
+</span><span class='line'>            <span class="nx">childScope</span><span class="p">[</span><span class="nx">indexString</span><span class="p">]</span> <span class="o">=</span> <span class="nx">collection</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nx">linker</span><span class="p">(</span><span class="nx">childScope</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">clone</span><span class="p">){</span>
+</span><span class='line'>              <span class="c1">// clone the transcluded element, passing in the new scope.</span>
+</span><span class='line'>              <span class="nx">parent</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">clone</span><span class="p">);</span> <span class="c1">// add to DOM</span>
+</span><span class='line'>              <span class="nx">block</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>              <span class="nx">block</span><span class="p">.</span><span class="nx">el</span> <span class="o">=</span> <span class="nx">clone</span><span class="p">;</span>
+</span><span class='line'>              <span class="nx">block</span><span class="p">.</span><span class="nx">scope</span> <span class="o">=</span> <span class="nx">childScope</span><span class="p">;</span>
+</span><span class='line'>              <span class="nx">elements</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">block</span><span class="p">);</span>
+</span><span class='line'>            <span class="p">});</span>
+</span><span class='line'>          <span class="p">};</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  Above you&#8217;ll note that I&#8217;m removing all the elements from the DOM, and their scope, every time the collection updates. While this makes the code easier to understand, it is extremely inefficient having to remove everything then add it again. In the real version of <code>ng-repeat</code>, only elements that are removed from the collection, are removed from the DOM. Furthermore, if an item moves within the collection (e.g. 2nd to 4th place) it doesn&#8217;t need a new scope, but it needs to be moved in the DOM. Reading <code>ng-repeat</code>&#8217;s code gives me confidence that the team behind AngularJS has created a good, well tested and efficient framework.
+</p>
+<p>
+  In part 2 I plan on exploring another directive. If you have any recommendations let me know below, or via twitter.
+</p></div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1304,161 +1505,6 @@ While I built Drawbridge.js to scratch my own itch, I hope others will find it u
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/03/22/making-hacker-news-faster-two-approaches/">Making Hacker News Faster: Two Approaches</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-03-22T00:00:00-04:00" pubdate data-updated="true">Mar 22<span>nd</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)</a>, &#8220;a social news website about computer hacking and startup companies&#8221; <a href="http://en.wikipedia.org/wiki/Hacker_News">(Wikipedia)</a>, has grown consistently, with an <a href=”http://www.ycombinator.com/images/hntraffic-5mar12.png”>average of 150,000 daily uniques</a>. The growth in traffic may explain why load times seem increasingly variable. I couldn’t help but wonder if some optimizations could be made to decrease both variability and load times. I&#8217;ll propose two broad approaches, the first involves migrating away from table based layouts while the second involves consuming a JSON API.
-</p>
-
-<h2> Approach 1: Tables to Divs </h2>
-
-<div class="table">
-  <h2> Table 1. Hacker News Resource Statistics </h2>
-  <table>
-    <tr>
-      <th>Resource</th>
-      <th>Size (With Tables) </th>
-      <th>Size (With Divs) </th>
-      <th>% Change </th>
-    </tr>
-    <tr>
-      <td>HTML</td>
-      <td>26KB</td>
-      <td>15KB</td>
-      <td>-42%</td>
-    </tr>
-    <tr>
-      <td>CSS</td>
-      <td>1.7KB</td>
-      <td>2.3KB</td>
-      <td>+35%</td>
-    </tr>
-    <tr>
-      <td>Logo</td>
-      <td>100B</td>
-      <td>0</td>
-      <td>-100%</td>
-    </tr>
-    <tr>
-      <td>Up Arrow</td>
-      <td>111B</td>
-      <td>0</td>
-      <td>-100%</td>
-    </tr>
-    <tr>
-      <td>Total</td>
-      <td>27.9KB</td>
-      <td>17.3KB</td>
-      <td>-37.2%</td>
-    </tr>
-  </table>
-  <p>
-    In the DIV version, the logo and up arrow were base 64 encoded and included in the HTML and CSS files. 
-  </p>
-</div>
-
-<p>
-  HN&#8217;s front page is comprised of: 4 tables, 98 rows, 159 columns, 37 inline style declarations and numerous attributes that dictate style. To reduce the markup on the front page I created a new HN front page (<a href="https://github.com/liamks/Making-HN-Faster/blob/master/HackerNewsV2.html">Github link</a>) that looks identical to the existing page but does not include tables or inline css. I also went a step further and base64 encoded both the logo and the up arrow to decrease the number of requests. The completed CSS file was run through a <a href="http://www.minifycss.com/css-compressor/">css minifyer</a> to yield further reductions. With those changes only two requests are necessary, one for the HTML file and one for the CSS file. Table 1 shows that those changes yielded an overall reduction of 37%.
-</p>
-
-<p>
-  I also slightly modified the JavaScript responsible for sending up-votes to the server. Instead of grabbing a vote&#8217;s id from the id of the HTML node, it gets it from the &#8216;data-id&#8217; attribute. Otherwise, the JavaScript remains identical. As an aside, if you have not examined the JavaScript that is responsible for sending votes to the server, I&#8217;ve included it below (the existing code). It&#8217;s a creative use of an image tag. An image node is created, but not added to the DOM. When the image node is assigned a &#8216;src&#8217;, which happens to include all the vote info, it then requests the &#8216;image&#8217;, using the constructed url. Thus the &#8216;image&#8217; request becomes analogous to an AJAX GET request, but without a conventional response.
-</p>
-
-<figure class='code'><figcaption><span>Votes With IMG Nodes</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">byId</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">function</span> <span class="nx">vote</span><span class="p">(</span><span class="nx">node</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="sr">/_/</span><span class="p">);</span>   <span class="c1">// {&#39;up&#39;, &#39;123&#39;}</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">item</span> <span class="o">=</span> <span class="nx">v</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// hide arrows</span>
-</span><span class='line'>  <span class="nx">byId</span><span class="p">(</span><span class="s1">&#39;up_&#39;</span>   <span class="o">+</span> <span class="nx">item</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span> <span class="o">=</span> <span class="s1">&#39;hidden&#39;</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">byId</span><span class="p">(</span><span class="s1">&#39;down_&#39;</span> <span class="o">+</span> <span class="nx">item</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">visibility</span> <span class="o">=</span> <span class="s1">&#39;hidden&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">// ping server</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">ping</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Image</span><span class="p">();</span>
-</span><span class='line'>  <span class="nx">ping</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">href</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span> <span class="c1">// cancel browser nav</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h2> Approach 2: JSON API </h2>
-<p>
-  Although approach 1 results in a 37% decrease in data transferred to the client, markup and data must be transferred to the client on every refresh. In approach two, the markup is only transferred to the client once, and then cached, while the data is sent the client via JSON. Using this approach would decrease the HTML file but no doubt increase the JavaScript file. However, both of those resources could be cached in browser, and cached on a CDN, drastically reducing the number of requests to HN&#8217;s server. Furthermore, the JSON representing the stories on the front page <a href="https://github.com/liamks/Making-HN-Faster/blob/master/frontpage.json">is 7.8KB</a>, much smaller than the amount size of the existing solution or even approach 1.
-</p>
-
-<p>
-  Approach 2 is not without its drawbacks. It would require significant changes in both HN&#8217;s backend and large changes to the client-side. A JavaScript application and API would have to be created. This approach would likely be incompatible with bots that would not execute the JavaScript necessary to populate the page with stories. To get around this the agent-type could be detected and a static version could be served to bots. Alternatively, the webpage could be pre-populated with stories and subsequent requests would take advantage of AJAX get requests. This would simplify matters, but make caching more difficult, since the cache page would require updating every time the front page changes.
-</p>
-
-<h2> Conlusions </h2>
-<p>
-  By transitioning from tables to divs, and inline css to external css, HN could dramatically reduce the bandwidth required to serve its web pages. The first approach would require minimal changes to HN&#8217;s back-end making it a good candidate for adoption. While the second approach could yield even better results, it would require drastic changes to both the server and the client, making it more suitable as a long term solution.
-</p>
-<p>
-  In addition to the two approaches above, gzip compressing both the .html and the .css would further reduce transferred data. It would also be beneficial to add the appropriate headers to enable browser caching for CSS.
-</p>
-<p>
-  While Paul Graham may have insufficient time, or interests, in implementing some of the above changes, I suspect he knows a few individuals who would be willing to help out.
-</p>
-
-<p>
-<a class="github" href="https://github.com/liamks/Making-HN-Faster"><span></span>Code on Github</a>
-</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1481,6 +1527,10 @@ Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">Understanding AngularJS Directives Part 1: ng-repeat and compile</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/02/27/adding-real-time-to-a-restful-rails-app/">Adding Real-Time To A RESTful Rails App</a>
       </li>
     
@@ -1494,10 +1544,6 @@ Over the years traffic to <a href="http://news.ycombinator.com">Hacker News (HN)
     
       <li class="post">
         <a href="/blog/2013/01/22/making-software-people-want-before-launching/">Before Launching Build Software People Use</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/11/21/why-you-should-be-nice-to-your-customers/">Why You Should Be Nice To Your Customers</a>
       </li>
     
   </ul>
