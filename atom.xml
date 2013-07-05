@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-05-17T08:33:28-04:00</updated>
+  <updated>2013-07-04T20:21:17-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -137,7 +137,7 @@
 </span><span class='line'>    <span class="nx">transclude</span> <span class="o">:</span> <span class="s1">&#39;element&#39;</span><span class="p">,</span>
 </span><span class='line'>    <span class="nx">compile</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nx">attr</span><span class="p">,</span> <span class="nx">linker</span><span class="p">){</span>
 </span><span class='line'>      <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$element</span><span class="p">,</span> <span class="nx">$attr</span><span class="p">){</span>
-</span><span class='line'>        <span class="kd">var</span> <span class="nx">myLoop</span> <span class="o">=</span> <span class="nx">$attr</span><span class="p">.</span><span class="nx">myLoop</span><span class="p">,</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">myLoop</span> <span class="o">=</span> <span class="nx">$attr</span><span class="p">.</span><span class="nx">lkRepeat</span><span class="p">,</span>
 </span><span class='line'>            <span class="nx">match</span> <span class="o">=</span> <span class="nx">myLoop</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/</span><span class="p">),</span>
 </span><span class='line'>            <span class="nx">indexString</span> <span class="o">=</span> <span class="nx">match</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
 </span><span class='line'>            <span class="nx">collectionString</span> <span class="o">=</span> <span class="nx">match</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
