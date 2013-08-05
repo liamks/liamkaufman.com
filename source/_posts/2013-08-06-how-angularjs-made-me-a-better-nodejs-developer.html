@@ -1,0 +1,147 @@
+---
+layout: post
+title: "How Angular.js Made Me a Better Node.js Developer"
+date: 2013-08-06
+comments: true
+---
+<p>
+	Over the past 6 years I’ve used Ruby on Rails, Backbone.js, Node and AngularJS.  RoR reinforced my knowledge of Model View Controller (MVC) while I made extensive use  of Publish/Subscribe in Backbone.js. Like many who made the switch to Node, my first instinct was to try and apply MVC to my Node.js apps - however, it felt unnatural. Taking a "class"-based approache, using CoffeeScript, didn’t feel holy natural either. 
+</p>
+<p>
+  While I enjoyed developing in JavaScript, I always felt I was missing something - that is until I started developing with AngularJS. AngularJS uses both dependency injection and promises extensively, both of which have improved my code. In this article, I'll focus on dependency injection, and discuss promises in my next article.
+</p>
+<h2>Dependency Injection</h2>
+<blockquote cite="http://angularjs.org">
+	"Dependency injection is also a core to AngularJS. This means that any component which does not fit your needs can easily be replaced." - angularjs.org
+</blockquote>
+<p>
+	AngularJS doesn’t just pay lip service to dependency injection, it’s a design pattern that it uses extensively, and builders of AngularJS apps use as well. Wikipedia defines dependency injection thusly:
+</p>
+<blockquote cite="http://angularjs.org">
+	"Dependency injection is a software design pattern that allows the removal of hard-coded dependencies and makes it possible to change them, whether at run-time or compile-time."
+</blockquote>
+<p>
+	So, how has dependency injection (DI) improved my Node.js apps? Traditionally I might write a task queue like so:
+</p>
+
+```javascript makeThumbnail.js
+var db = require('./database.js');
+
+module.exports = {
+  start : function(input){
+    // makeThumbnail
+    // save timestamp
+    db.save({...});
+  }
+};
+```
+
+```javascript uploadToS3.js
+var db = require('./database.js');
+
+module.exports = {
+  start : function(input){
+    // upload thumb
+    // perhaps save bucket name
+    db.save({...});
+  }
+};
+```
+<p>
+	Using dependency injection I’d change that to this:
+</p>
+
+
+```javascript makeThumbnail.js
+module.exports = {
+  start : function(input, db){
+    // makeThumbnail
+    // save timestamp
+    db.save({...});
+  }
+};
+```
+
+```javascript uploadToS3.js
+module.exports = {
+  start : function(input, db){
+    // upload thumb
+    // perhaps save bucket name
+    db.save({...});
+  }
+};
+```
+
+```javascript taskRunner.js
+var db = require('./database.js'),
+    makeThumbnail = require('./tasks/makeThumbnail'),
+    uploadToS3 = require('./tasks/uploadToS3'),
+    taskToRun = process.argv[2],
+    taskRunner;
+
+taskRunner = function(task){
+  task.start(process.argv, db);
+};
+
+if(taskToRun === 'uploadToS3'){
+  taskRunner(uploadToS3);
+}else{
+  taskRunner(makeThumbnail);
+}
+```
+<p>
+	While the DI example above requires more code than the original, it makes testing easier and I'd argue better. It becomes trivial to test each unit in isolation of other units of code. With the first approach, each unit test would require database calls. With the second approach, we can inject a mock database object like so:
+</p>
+
+```javascript makeThumbnail.test.js
+var makeThumbnail = require('makeThumbnail');
+
+describe('Make Thumbnail', function(){
+  var database = {};
+
+  it('should make a thumbnail, and call db.save', function(done){
+    var input = {
+      imageId : 1
+    };
+
+    database.save = function(obj){
+      assert.equal(obj.id, input.imageId);
+      done();
+    }
+
+    makeThumbnail(input, database);
+  });
+});
+```
+<p>
+	This speeds testing up significantly and ensures that if the unit tests fails it's not failing because of issues within the database. Ultimately, this makes localizing bugs to specific units of code much quicker. In other words we can test just the creation of thumbnails, and not our database (which we'd do separately).
+</p>
+<p>
+	DI forces one to think more rigorously about how code will be divided into modules, and what modules will be injected into other modules. This requires more diligence upfront, but leads to greater flexibility down the line. For instance, the database object is only being <code>required()</code> and injected in a single spot in the code, making it much easier to swap the database from say MySQL to Postgresql.
+</p>
+
+<h2>Why not use use require?</h2>
+<p>
+  On a post <a href="http://www.alexrothenberg.com/2013/02/11/the-magic-behind-angularjs-dependency-injection.html">detailing the magic behind AngularJS' DI</a>, tjholowaychuk (of Express.js, Jade and Mocha fame) asks: "why not just require() what you want? seems odd to me"?
+ </p>
+<p>
+  <img src="/images/why-not-use-require.png">
+</p>
+
+<p>
+  Despite asking 6 months ago, no one has replied, leaving readers pondering why. As the example above shows, requiring dependencies at the top of each file makes mocking more difficult. One could write a wrapper around each dependency, and serve it normall for development/production and serve the mocked version for test ENV, but at that point why not consider DI?
+</p>
+<h2>Conclusion</h2>
+<p>
+	As learning new programming languages makes us better developers so does learning new frameworks. Learning a new framework helps us learn, and reinforce our knowledge of design patterns. Qes, on programmers.stackexchange.com, sums up his experiences with DI:
+</p>
+<a href="http://programmers.stackexchange.com/questions/19203/what-are-the-benefits-of-using-dependency-injection-and-ioc-containers"><img src="/images/stackexchange_dependency_injection.png" alt="A quote about the importance of dependency injection."></a>
+
+<h2>Extra Reading</h2>
+<ol>
+  <li><a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (Wikipedia)</a></li>
+  <li><a href="http://www.alexrothenberg.com/2013/02/11/the-magic-behind-angularjs-dependency-injection.html">How DI In AngularJS Works</a></li>
+  <li><a href="http://www.jacopretorius.net/2013/07/angularjs-best-practices.html">AngularJS Best Practices [questions the necessity of DI]</a></li>
+</ol>
+
+
