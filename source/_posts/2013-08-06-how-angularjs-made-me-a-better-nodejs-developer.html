@@ -1,14 +1,14 @@
 ---
 layout: post
-title: "How Angular.js Made Me a Better Node.js Developer"
+title: "How AngularJS Made Me a Better Node.js Developer"
 date: 2013-08-06
 comments: true
 ---
 <p>
-	Over the past 6 years I’ve used Ruby on Rails, Backbone.js, Node and AngularJS.  RoR reinforced my knowledge of Model View Controller (MVC) while I made extensive use  of Publish/Subscribe in Backbone.js. Like many who made the switch to Node, my first instinct was to try and apply MVC to my Node.js apps - however, it felt unnatural. Taking a "class"-based approache, using CoffeeScript, didn’t feel holy natural either. 
+	Over the past 6 years I’ve used Ruby on Rails, Backbone.js, Node and AngularJS.  RoR reinforced my knowledge of Model View Controller (MVC) while Backbone.js did the same for my knowledge of Publish/Subscribe. Like many who made the switch to Node, my first instinct was to try and apply MVC to my Node.js apps - however, it felt unnatural. Taking a "class"-based approach, using CoffeeScript, didn’t feel entirely natural either. 
 </p>
 <p>
-  While I enjoyed developing in JavaScript, I always felt I was missing something - that is until I started developing with AngularJS. AngularJS uses both dependency injection and promises extensively, both of which have improved my code. In this article, I'll focus on dependency injection, and discuss promises in my next article.
+  While I enjoyed developing in JavaScript, I always felt I was missing something - that is until I started developing with AngularJS. AngularJS uses both dependency injection and promises extensively, both of which have greatly improved my code. In this article, I'll focus on dependency injection, and discuss promises in my next article.
 </p>
 <h2>Dependency Injection</h2>
 <blockquote cite="http://angularjs.org">
@@ -114,7 +114,7 @@ describe('Make Thumbnail', function(){
 });
 ```
 <p>
-	This speeds testing up significantly and ensures that if the unit tests fails it's not failing because of issues within the database. Ultimately, this makes localizing bugs to specific units of code much quicker. In other words we can test just the creation of thumbnails, and not our database (which we'd do separately).
+	This speeds testing up significantly and ensures that if the unit tests fails it's not failing because of issues with the database code. Ultimately, this makes localizing bugs much quicker. In other words we can test just the creation of thumbnails, and not our database (which we'd do separately).
 </p>
 <p>
 	DI forces one to think more rigorously about how code will be divided into modules, and what modules will be injected into other modules. This requires more diligence upfront, but leads to greater flexibility down the line. For instance, the database object is only being <code>required()</code> and injected in a single spot in the code, making it much easier to swap the database from say MySQL to Postgresql.
@@ -129,7 +129,7 @@ describe('Make Thumbnail', function(){
 </p>
 
 <p>
-  Despite asking 6 months ago, no one has replied, leaving readers pondering why. As the example above shows, requiring dependencies at the top of each file makes mocking more difficult. One could write a wrapper around each dependency, and serve it normall for development/production and serve the mocked version for test ENV, but at that point why not consider DI?
+  Despite asking 6 months ago, no one has replied, leaving readers pondering why. As the example above shows, requiring dependencies at the top of each file makes mocking more difficult. One could write a wrapper around each dependency, and serve it normally for development/production and serve the mocked version for test ENV, but at that point why not consider DI?
 </p>
 <h2>Conclusion</h2>
 <p>
