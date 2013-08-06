@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-07-04T20:21:17-04:00</updated>
+  <updated>2013-08-06T08:17:21-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -12,6 +12,214 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[How AngularJS Made Me a Better Node.js Developer]]></title>
+    <link href="http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/"/>
+    <updated>2013-08-06T00:00:00-04:00</updated>
+    <id>http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer</id>
+    <content type="html"><![CDATA[<p>
+	Over the past 6 years I’ve used Ruby on Rails, Backbone.js, Node and AngularJS.  RoR reinforced my knowledge of Model View Controller (MVC) while Backbone.js did the same for my knowledge of Publish/Subscribe. Like many who made the switch to Node, my first instinct was to try and apply MVC to my Node.js apps - however, it felt unnatural. Taking a &#8220;class&#8221;-based approach, using CoffeeScript, didn’t feel entirely natural either. 
+</p>
+<p>
+  While I enjoyed developing in JavaScript, I always felt I was missing something - that is until I started developing with AngularJS. AngularJS uses both dependency injection and promises extensively, both of which have greatly improved my code. In this article, I&#8217;ll focus on dependency injection, and discuss promises in my next article.
+</p>
+<h2>Dependency Injection</h2>
+<blockquote cite="http://angularjs.org">
+	&#8220;Dependency injection is also a core to AngularJS. This means that any component which does not fit your needs can easily be replaced.&#8221; - angularjs.org
+</blockquote>
+<p>
+	AngularJS doesn’t just pay lip service to dependency injection, it’s a design pattern that it uses extensively, and builders of AngularJS apps use as well. Wikipedia defines dependency injection thusly:
+</p>
+<blockquote cite="http://angularjs.org">
+	&#8220;Dependency injection is a software design pattern that allows the removal of hard-coded dependencies and makes it possible to change them, whether at run-time or compile-time.&#8221;
+</blockquote>
+<p>
+	So, how has dependency injection (DI) improved my Node.js apps? Traditionally I might write a task queue like so:
+</p>
+
+<figure class='code'><figcaption><span>makeThumbnail.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database.js&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// makeThumbnail</span>
+</span><span class='line'>    <span class="c1">// save timestamp</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>uploadToS3.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database.js&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// upload thumb</span>
+</span><span class='line'>    <span class="c1">// perhaps save bucket name</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+	Using dependency injection I’d change that to this:
+</p>
+
+
+<figure class='code'><figcaption><span>makeThumbnail.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">db</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// makeThumbnail</span>
+</span><span class='line'>    <span class="c1">// save timestamp</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>uploadToS3.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">db</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// upload thumb</span>
+</span><span class='line'>    <span class="c1">// perhaps save bucket name</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>taskRunner.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database.js&#39;</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">makeThumbnail</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./tasks/makeThumbnail&#39;</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">uploadToS3</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./tasks/uploadToS3&#39;</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">taskToRun</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span class='line'>    <span class="nx">taskRunner</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">taskRunner</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">task</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">task</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">,</span> <span class="nx">db</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span><span class="p">(</span><span class="nx">taskToRun</span> <span class="o">===</span> <span class="s1">&#39;uploadToS3&#39;</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">taskRunner</span><span class="p">(</span><span class="nx">uploadToS3</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class='line'>  <span class="nx">taskRunner</span><span class="p">(</span><span class="nx">makeThumbnail</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+	While the DI example above requires more code than the original, it makes testing easier and I&#8217;d argue better. It becomes trivial to test each unit in isolation of other units of code. With the first approach, each unit test would require database calls. With the second approach, we can inject a mock database object like so:
+</p>
+
+<figure class='code'><figcaption><span>makeThumbnail.test.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">makeThumbnail</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;makeThumbnail&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;Make Thumbnail&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">database</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should make a thumbnail, and call db.save&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">){</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">input</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">imageId</span> <span class="o">:</span> <span class="mi">1</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">database</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">input</span><span class="p">.</span><span class="nx">imageId</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">makeThumbnail</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">database</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+	This speeds testing up significantly and ensures that if the unit tests fails it&#8217;s not failing because of issues with the database code. Ultimately, this makes localizing bugs much quicker. In other words we can test just the creation of thumbnails, and not our database (which we&#8217;d do separately).
+</p>
+<p>
+	DI forces one to think more rigorously about how code will be divided into modules, and what modules will be injected into other modules. This requires more diligence upfront, but leads to greater flexibility down the line. For instance, the database object is only being <code>required()</code> and injected in a single spot in the code, making it much easier to swap the database from say MySQL to Postgresql.
+</p>
+
+<h2>Why not use use require?</h2>
+<p>
+  On a post <a href="http://www.alexrothenberg.com/2013/02/11/the-magic-behind-angularjs-dependency-injection.html">detailing the magic behind AngularJS&#8217; DI</a>, tjholowaychuk (of Express.js, Jade and Mocha fame) asks: &#8220;why not just require() what you want? seems odd to me&#8221;?
+ </p>
+<p>
+  <img src="http://liamkaufman.com/images/why-not-use-require.png">
+</p>
+
+<p>
+  Despite asking 6 months ago, no one has replied, leaving readers pondering why. As the example above shows, requiring dependencies at the top of each file makes mocking more difficult. One could write a wrapper around each dependency, and serve it normally for development/production and serve the mocked version for test ENV, but at that point why not consider DI?
+</p>
+<h2>Conclusion</h2>
+<p>
+	As learning new programming languages makes us better developers so does learning new frameworks. Learning a new framework helps us learn, and reinforce our knowledge of design patterns. Qes, on programmers.stackexchange.com, sums up his experiences with DI:
+</p>
+<a href="http://programmers.stackexchange.com/questions/19203/what-are-the-benefits-of-using-dependency-injection-and-ioc-containers"><img src="http://liamkaufman.com/images/stackexchange_dependency_injection.png" alt="A quote about the importance of dependency injection."></a>
+
+<h2>Extra Reading</h2>
+<ol>
+  <li><a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (Wikipedia)</a></li>
+  <li><a href="http://www.alexrothenberg.com/2013/02/11/the-magic-behind-angularjs-dependency-injection.html">How DI In AngularJS Works</a></li>
+  <li><a href="http://www.jacopretorius.net/2013/07/angularjs-best-practices.html">AngularJS Best Practices [questions the necessity of DI]</a></li>
+</ol>
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Understanding AngularJS Directives Part 1: ng-repeat and compile]]></title>
@@ -2770,40 +2978,6 @@ Trouble Shooting
   some concrete CRUD examples for a single class!
 </p>
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[What is the best way of Mastering JavaScript?]]></title>
-    <link href="http://liamkaufman.com/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript/"/>
-    <updated>2011-09-09T00:00:00-04:00</updated>
-    <id>http://liamkaufman.com/blog/2011/09/09/what-is-the-best-way-of-mastering-javascript</id>
-    <content type="html"><![CDATA[<p>
-I want to master JavaScript. Before humbly doing so, I think it’s important to define what I think mastering JS consists of. In my opinion there are two parts to mastering a programming language. The first is mastering the language itself: syntax, important functions, classes, idioms, etc. The second part is mastering the programming paradigm, or paradigms, that the language falls in. This second part is difficult with JS, as it is <a href="http://en.wikipedia.org/wiki/JavaScript">object oriented, functional and imperative </a>. Thus, to master JS I must master both parts: 1) the language and 2) the paradigms.
-</p>
-
-<p>
-Before explaining how I’m going to accomplish this goal, it’s worth while for me to briefly explain why I want to. I have been programming for 4 years and I just recently finished a computer science degree. In school I completed assignments where I learned elements from the 3 major programming paradigms that JS falls into. Likewise, I spent the last year using JS, but I have not delved deeper into it. Since I have scratched the surface I have realized that I enjoy creating web applications, but I eagerly want to be better at it.
-</p>
-
-<p>
-Becoming a master will no doubt take years of effort, and countless hours, however I think the first four months will be critical - they will provide the foundation to build my knowledge upon. In the next four months I hope to accomplish the following (roughly in order):
-</p>
-<ol>
-	<li>Read <em>JavaScript: The Good Parts</em>, by Douglas Crockford. (I’ve started this part)</li>
-	<li>Examine jQuery’s source code.</li>
-	<li>Contribute to jQuery, most likely a bug fix.</li>
-	<li>Read <em>JavaScript Web Applications</em>, by Alex MacCaw.</li>
-	<li>Examine Backbone.js’s source code .</li>
-	<li>Contribute to Backbone.js</li>
-</ol>
-
-<p>
-While completing those six goals I plan on weaving what I’ve learning into projects that I’ll be undertaking in the next four months. My hope is that by reading books, and other people’s code, I’ll learn how to write better code and engineer larger JS applications. Furthermore, by actually working on projects I’ll reinforce what I’ve learned and I’ll have something tangible to show.
-</p>
-
-<p>
-Is this the best way of accomplishing my goal of mastering JS? Discuss on <a href="http://news.ycombinator.com/item?id=2979582">Hacker News.</a>
-</p>]]></content>
   </entry>
   
 </feed>

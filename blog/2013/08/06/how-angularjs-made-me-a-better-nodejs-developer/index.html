@@ -1,0 +1,558 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>How AngularJS Made Me a Better Node.js Developer - Liam Kaufman</title>
+  <meta name="author" content="Liam Kaufman">
+
+  
+  <meta name="description" content="Over the past 6 years I’ve used Ruby on Rails, Backbone.js, Node and AngularJS. RoR reinforced my knowledge of Model View Controller (MVC) while &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer">
+
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="alternate" title="Liam Kaufman" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1004776-5']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+ 
+  <h1><a href="/">Liam Kaufman</a></h1>
+  
+    <h2>Software Developer and Entrepreneur</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liamkaufman.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/projects.html">Projects</a></li>
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">How AngularJS Made Me a Better Node.js Developer</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-08-06T00:00:00-04:00" pubdate data-updated="true">Aug 6<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>
+	Over the past 6 years I’ve used Ruby on Rails, Backbone.js, Node and AngularJS.  RoR reinforced my knowledge of Model View Controller (MVC) while Backbone.js did the same for my knowledge of Publish/Subscribe. Like many who made the switch to Node, my first instinct was to try and apply MVC to my Node.js apps - however, it felt unnatural. Taking a &#8220;class&#8221;-based approach, using CoffeeScript, didn’t feel entirely natural either. 
+</p>
+<p>
+  While I enjoyed developing in JavaScript, I always felt I was missing something - that is until I started developing with AngularJS. AngularJS uses both dependency injection and promises extensively, both of which have greatly improved my code. In this article, I&#8217;ll focus on dependency injection, and discuss promises in my next article.
+</p>
+<h2>Dependency Injection</h2>
+<blockquote cite="http://angularjs.org">
+	&#8220;Dependency injection is also a core to AngularJS. This means that any component which does not fit your needs can easily be replaced.&#8221; - angularjs.org
+</blockquote>
+<p>
+	AngularJS doesn’t just pay lip service to dependency injection, it’s a design pattern that it uses extensively, and builders of AngularJS apps use as well. Wikipedia defines dependency injection thusly:
+</p>
+<blockquote cite="http://angularjs.org">
+	&#8220;Dependency injection is a software design pattern that allows the removal of hard-coded dependencies and makes it possible to change them, whether at run-time or compile-time.&#8221;
+</blockquote>
+<p>
+	So, how has dependency injection (DI) improved my Node.js apps? Traditionally I might write a task queue like so:
+</p>
+
+<figure class='code'><figcaption><span>makeThumbnail.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database.js&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// makeThumbnail</span>
+</span><span class='line'>    <span class="c1">// save timestamp</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>uploadToS3.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database.js&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// upload thumb</span>
+</span><span class='line'>    <span class="c1">// perhaps save bucket name</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+	Using dependency injection I’d change that to this:
+</p>
+
+
+<figure class='code'><figcaption><span>makeThumbnail.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">db</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// makeThumbnail</span>
+</span><span class='line'>    <span class="c1">// save timestamp</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>uploadToS3.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">start</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">db</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// upload thumb</span>
+</span><span class='line'>    <span class="c1">// perhaps save bucket name</span>
+</span><span class='line'>    <span class="nx">db</span><span class="p">.</span><span class="nx">save</span><span class="p">({...});</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>taskRunner.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./database.js&#39;</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">makeThumbnail</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./tasks/makeThumbnail&#39;</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">uploadToS3</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./tasks/uploadToS3&#39;</span><span class="p">),</span>
+</span><span class='line'>    <span class="nx">taskToRun</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span class='line'>    <span class="nx">taskRunner</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">taskRunner</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">task</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">task</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">,</span> <span class="nx">db</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span><span class="p">(</span><span class="nx">taskToRun</span> <span class="o">===</span> <span class="s1">&#39;uploadToS3&#39;</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">taskRunner</span><span class="p">(</span><span class="nx">uploadToS3</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class='line'>  <span class="nx">taskRunner</span><span class="p">(</span><span class="nx">makeThumbnail</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+	While the DI example above requires more code than the original, it makes testing easier and I&#8217;d argue better. It becomes trivial to test each unit in isolation of other units of code. With the first approach, each unit test would require database calls. With the second approach, we can inject a mock database object like so:
+</p>
+
+<figure class='code'><figcaption><span>makeThumbnail.test.js</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">makeThumbnail</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;makeThumbnail&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;Make Thumbnail&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">database</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;should make a thumbnail, and call db.save&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">){</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">input</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">imageId</span> <span class="o">:</span> <span class="mi">1</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">database</span><span class="p">.</span><span class="nx">save</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">input</span><span class="p">.</span><span class="nx">imageId</span><span class="p">);</span>
+</span><span class='line'>      <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">makeThumbnail</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span> <span class="nx">database</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+	This speeds testing up significantly and ensures that if the unit tests fails it&#8217;s not failing because of issues with the database code. Ultimately, this makes localizing bugs much quicker. In other words we can test just the creation of thumbnails, and not our database (which we&#8217;d do separately).
+</p>
+<p>
+	DI forces one to think more rigorously about how code will be divided into modules, and what modules will be injected into other modules. This requires more diligence upfront, but leads to greater flexibility down the line. For instance, the database object is only being <code>required()</code> and injected in a single spot in the code, making it much easier to swap the database from say MySQL to Postgresql.
+</p>
+
+<h2>Why not use use require?</h2>
+<p>
+  On a post <a href="http://www.alexrothenberg.com/2013/02/11/the-magic-behind-angularjs-dependency-injection.html">detailing the magic behind AngularJS&#8217; DI</a>, tjholowaychuk (of Express.js, Jade and Mocha fame) asks: &#8220;why not just require() what you want? seems odd to me&#8221;?
+ </p>
+<p>
+  <img src="/images/why-not-use-require.png">
+</p>
+
+<p>
+  Despite asking 6 months ago, no one has replied, leaving readers pondering why. As the example above shows, requiring dependencies at the top of each file makes mocking more difficult. One could write a wrapper around each dependency, and serve it normally for development/production and serve the mocked version for test ENV, but at that point why not consider DI?
+</p>
+<h2>Conclusion</h2>
+<p>
+	As learning new programming languages makes us better developers so does learning new frameworks. Learning a new framework helps us learn, and reinforce our knowledge of design patterns. Qes, on programmers.stackexchange.com, sums up his experiences with DI:
+</p>
+<a href="http://programmers.stackexchange.com/questions/19203/what-are-the-benefits-of-using-dependency-injection-and-ioc-containers"><img src="/images/stackexchange_dependency_injection.png" alt="A quote about the importance of dependency injection."></a>
+
+<h2>Extra Reading</h2>
+<ol>
+  <li><a href="http://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection (Wikipedia)</a></li>
+  <li><a href="http://www.alexrothenberg.com/2013/02/11/the-magic-behind-angularjs-dependency-injection.html">How DI In AngularJS Works</a></li>
+  <li><a href="http://www.jacopretorius.net/2013/07/angularjs-best-practices.html">AngularJS Best Practices [questions the necessity of DI]</a></li>
+</ol>
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Liam Kaufman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-08-06T00:00:00-04:00" pubdate data-updated="true">Aug 6<span>th</span>, 2013</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  <a href="http://news.ycombinator.com/submit" class="hn-share-button">Vote on HN</a>
+
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/" title="Previous Post: Understanding AngularJS Directives Part 1: ng-repeat and compile">&laquo; Understanding AngularJS Directives Part 1: ng-repeat and compile</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  <div class='social'>
+
+  <a id="twitter" href="https://twitter.com/liamkaufman"><span></span>@liamkaufman</a>
+  <a id="github" href="https://github.com/liamks"><span></span>@liamks</a>
+  <a id="linked-in" href="http://www.linkedin.com/pub/liam-kaufman/1b/7b4/2a4"><span></span>Liam Kaufman</a> 
+</div>
+
+
+  <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/">How AngularJS Made Me a Better Node.js Developer</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">Understanding AngularJS Directives Part 1: ng-repeat and compile</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/27/adding-real-time-to-a-restful-rails-app/">Adding Real-Time To A RESTful Rails App</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/08/three-important-conversion-metrics-you-should-watch/">Three Important Conversion Metrics You Should Watch</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/30/are-you-ready-to-launch/">Are You Ready To Launch?</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("liamkaufman", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <p>Follow <a href="http://twitter.com/liamkaufman">@liamkaufman</a></p>
+  
+</section>
+
+
+
+
+
+
+
+
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Liam Kaufman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/';
+        var disqus_url = 'http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+    
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/';
+        var disqus_url = 'http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  <script>
+    (function(d, t) {
+        var g = d.createElement(t),
+            s = d.getElementsByTagName(t)[0];
+        g.src = '//hnbutton.appspot.com/static/hn.js';
+        s.parentNode.insertBefore(g, s);
+    }(document, 'script'));
+  </script>
+</body>
+</html>
