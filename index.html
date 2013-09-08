@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="Over the past 6 years I’ve used Ruby on Rails, Backbone.js, Node and AngularJS. RoR reinforced my knowledge of Model View Controller (MVC) while &hellip;">
+  <meta name="description" content="In my previous article I discussed the benefits of using dependency injection to make code more testable and modular. In this article I’ll focus on &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,326 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/09/09/using-angularjs-promises/">Using AngularJS Promises</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-09T00:00:00-04:00" pubdate data-updated="true">Sep 9<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+  In my previous article I discussed the <a href="/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/">benefits of using dependency injection</a> to make code more testable and modular. In this article I’ll focus on using promises within an AngularJS application. This article assume some prior knowledge of promises (<a href="http://wildermuth.com/2013/8/3/JavaScript_Promises">a good intro on promises</a> and <a href="http://docs.angularjs.org/api/ng.$q">AngularJS&#8217; official documentation</a>).
+</p>
+
+<p>
+  Promises can be used to unnest asynchronous functions and allows one to chain multiple functions together - increasing readability and making individual functions, within the chain, more reusable.
+</p>
+
+<figure class='code'><figcaption><span>Standard Callbacks (no promises)</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">fetchData</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">cb</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">getDataFromServer</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class='line'>      <span class="nx">transformData</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">transformedResult</span><span class="p">){</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>          <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class='line'>          <span class="nx">saveToIndexDB</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">savedData</span><span class="p">){</span>
+</span><span class='line'>            <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">savedData</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  Once <code>getDataFromServer()</code>, <code>transformData()</code> and <code>saveToIndexDB()</code> are converted to returning promises we can refactor the above code to:
+</p>
+
+<figure class='code'><figcaption><span>With Promises</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">fetchData</span><span class="p">(</span><span class="nx">id</span><span class="p">){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">getDataFromServer</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
+</span><span class='line'>          <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">transformData</span><span class="p">)</span>
+</span><span class='line'>          <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">saveToIndexDB</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  In addition to increasing readability promises can help with error handling, progress updates, and AngularJS templates.
+</p>
+
+<h2>Handling Errors</h2>
+<p>
+  If <code>fetchData</code> is called and an exception is raised in <code>transformData()</code> or <code>saveToIndexDB()</code>, it will trigger the final error callback.
+</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">fetchData</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// exceptions in transformData, or saveToIndexDB</span>
+</span><span class='line'>    <span class="c1">// will result in this error callback being called.</span>
+</span><span class='line'>  <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+   Unfortunately, if an exception is raised in <code>getDataFromServer()</code> it will not trigger the final error callback. This happens because <code>transformData()</code> and <code>saveToIndexDB()</code> are called within the context of <code>.then()</code>, which uses try-catch, and automatically calls <code>.reject()</code> on an exception. To bring this behaviour to the first function we can introduce a try-catch block like:
+</p>
+
+<figure class='code'><figcaption><span>getDataFromServer()</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getDataFromServer</span><span class="p">(</span><span class="nx">id</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">try</span><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// asynchronous function, which calls</span>
+</span><span class='line'>    <span class="c1">// deferred.resolve() on sucess</span>
+</span><span class='line'>  <span class="p">}</span><span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  While adding try-catch made <code>getDataFromServer()</code> less elegant, it makes it more robust and easier to use as the first in a chain of promises.
+</p>
+
+<h2>Using Notify for Progress Updates</h2>
+
+<p>
+  A promise can only be resolved, or rejected, once. To provide progress updates, which may happen zero or more times, a promise also includes a notify callback (introduced in AngularJS 1.2+). Notify could be used to provide incremental progress updates on a long running asynchronous task. Below is an example of a long running function, <code>processLotsOfData()</code>, that uses <code>notify</code> to provide progress updates.
+</p>
+ 
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">processLotsOfData</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class="p">[],</span>
+</span><span class='line'>      <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">(),</span>
+</span><span class='line'>      <span class="nx">percentComplete</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">output</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">processDataItem</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">]));</span>
+</span><span class='line'>    <span class="nx">percentComplete</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span> <span class="o">*</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">notify</span><span class="p">(</span><span class="nx">percentComplete</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">output</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">processLotsOfData</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// success</span>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// error</span>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">percentComplete</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">$scope</span><span class="p">.</span><span class="nx">progress</span> <span class="o">=</span> <span class="nx">percentComplete</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  Using the notify function, we can make many updates to the $scope&#8217;s progress variable before processLotsOfData is resolved (finished), making notify ideal for progress bars.
+</p>
+
+<p>
+  Unfortunately, using notify in a chain or promises is cumbersome since calls to notify do not bubble up. Every function in the chain would have to manually bubble up notifications, making code a little more difficult to read.
+</p>
+
+<h2>Templates</h2>
+
+<p>
+  AngularJS templates understand promises and delays their rendering until they&#8217;re resolved, or rejected. For instance let&#8217;s say our template looks like:
+</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;p>{{bio}}&lt;/p></span></code></pre></td></tr></table></div></figure>
+
+<p>
+  We could do the following in our controller:
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getBio</span><span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+</span><span class='line'>  <span class="c1">// async call, resolved after ajax request completes</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">$scope</span><span class="p">.</span><span class="nx">bio</span> <span class="o">=</span> <span class="nx">getBio</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  The view renders normally, and when the promise is resolved AngularJS automatically updates the view to include the value resolved in getBio.
+</p>
+
+<h2>Limitations of Promises in AngularJS</h2>
+<p>
+  When a promise is resolved asynchronously, “in a future turn of the event loop”, the .resolve() function must be wrapped in a promise. In the contrived example below, a user would click a button triggering <code>goodbye()</code>, which should update the <code>$scope</code>&#8217;s greeting attribute. 
+</p>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;AppCtrl&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="p">[</span>   <span class="s1">&#39;$scope&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s1">&#39;$q&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="kd">function</span> <span class="nx">AppCtrl</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$q</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="kd">var</span> <span class="nx">updateGreeting</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">){</span>
+</span><span class='line'>          <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>              <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">},</span> <span class="mi">5</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'>       <span class="p">};</span>
+</span><span class='line'>      <span class="nx">$scope</span><span class="p">.</span><span class="nx">goodbye</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>          <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="nx">updateGreeting</span><span class="p">(</span><span class="s1">&#39;goodbye&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  Unfortunately, it doesn&#8217;t work as expected, since the asynchronous event works outside of AngularJS&#8217; event loop. The fix for this (besides using AngularJS&#8217; setTimemout function), is to wrap the deferred&#8217;s resolve in <code>$scope.$apply</code> to trigger the digest cycle and update the <code>$scope</code> accordingly:
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">$apply</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">},</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Jim Hoskins goes into more detail on using <code>$apply</code>: <a href="http://jimhoskins.com/2012/12/17/angularjs-and-apply.html">http://jimhoskins.com/2012/12/17/angularjs-and-apply.html</a></p>
+
+<h2>Conclusions</h2>
+<p>
+  Using promises is an important part of writing an AngularJS app idiomatically and should help make your code more readable. Understanding their shortcomings, and their strengths make them much easier to work with.
+</p>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1460,209 +1780,6 @@ To send the invites out, I went to Understoodit&#8217;s admin panel and seleted 
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2012/06/04/redis-and-relational-data/">Redis and Relational Data</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-06-04T00:00:00-04:00" pubdate data-updated="true">Jun 4<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>
-  <strong>UPDATE:</strong> Based on the feedback in the comments (Phineas), I&#8217;ve added an index to the comments table and updated the results.
-</p>
-<p>
-  Using the right tool for the job is a basic tenant amongst programmers. However, with all the currently available database options it&#8217;s increasingly difficult to figure out what the right tool is. Sometime it&#8217;s nice to have a very simple tool that can be used for many different tasks: Redis. Over the last 4 months I&#8217;ve been using Redis heavily and I&#8217;ve even started to use it for relational data. I&#8217;ve been curious to find out the performance differences between Redis and PostgreSQL. Below I&#8217;ll provide an example of storing a simple relational dataset in Redis, and I&#8217;ll look at the performance differences between Redis and PostgreSQL.
-</p>
-
-<h2>Why use Redis for Relational data?</h2>
-<p>
-  I find Redis appealing because it&#8217;s the simplest database that I have ever used (relative to: MySQL, PostgreSQL, Riak &amp; Mongo). The documentation includes the time complexity of each command, and the documentation provides an interactive console to experiment with a given command. There&#8217;s also a certain appeal to using a single database instead of 2 or 3: 
-  <ol>
-    <li>It&#8217;s much quicker to master 1 database than 2.</li>
-    <li>Two different databases means twice the updates, bugs and crashes.</li>
-  </ol>
-</p>
-
-<p>
-  I&#8217;ll outline a few ways Redis can be used to store relational data and the performance differences between redis and PostgreSQL. All the examples and performance tests were done using Node.js.
-</p>
-
-<h2>Storing Relational Data in Redis</h2>
-
-<p>
-  Redis values can be 1 of 5 different datatypes: strings, hashes, lists, sets and sorted sets. Each row in a relational database can be represented using a hash, and a list, set or sorted set can be used to represent a table. The datatype that&#8217;s used to represent the table is dependent on how the data needs to be retrieved.
-</p>
-
-<p>
-  For example, let&#8217;s say we&#8217;re storing blog posts. In Redis, each post will be stored in its own hash, with its key corresponding to the post&#8217;s url:
-</p>
-
-<figure class='code'><figcaption><span>A Post</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="s1">&#39;a-post-about-databases&#39;</span> <span class="o">:</span>
-</span><span class='line'>  <span class="p">{</span> <span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;A post about databases&#39;</span><span class="p">,</span> <span class="nx">body</span> <span class="o">:</span> <span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="nx">createdAt</span> <span class="o">:</span> <span class="mi">1338751532301</span><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>
-  Retrieving a single post using the url becomes O(N), where N is the size of the hash (post). Since the number of keys in a post is constant, retrieving that post becomes O(1). However, if we wanted to get all the posts, or a subset of them, it becomes useful to also store the keys in a sorted set (e.g. the &#8220;table&#8221;). Using a sorted set means that posts can be stored by their createdAt date and it allows us to retrieve all the posts, or a subset of them (useful for pagination).
-</p>
-
-
-<figure class='code'><figcaption><span>Retrieving a subset of all posts</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">redis</span><span class="p">.</span><span class="nx">zrange</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">posts</span><span class="p">){</span>
-</span><span class='line'>  <span class="c1">//return the keys (urls) associated with the first 11 posts</span>
-</span><span class='line'><span class="p">})</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">startDate</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="nx">getTime</span><span class="p">()</span> <span class="p">;</span> <span class="c1">// June 1st</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">endDate</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">30</span><span class="p">)).</span><span class="nx">getTime</span><span class="p">();</span> <span class="c1">// June 30th</span>
-</span><span class='line'><span class="nx">redis</span><span class="p">.</span><span class="nx">zrangebyscore</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="nx">startDate</span><span class="p">,</span> <span class="nx">endDate</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">posts</span><span class="p">){</span>
-</span><span class='line'>  <span class="c1">//returns the keys (urls) associated with all the posts from June 2012</span>
-</span><span class='line'><span class="p">})</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<p>
-  The above example is relatively straight forward, but what about storing the post&#8217;s comments? For every post we create a new sorted set called: &#8216;comments-KEYofPOST&#8217;. The comments are sorted by their creation time. To get a post, and its comments, we could do the following:
-</p>
-
-<figure class='code'><figcaption><span>Storing a post&#8217;s comments</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">postURL</span> <span class="o">=</span> <span class="s1">&#39;a-post-about-databases&#39;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">multi</span> <span class="o">=</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">multi</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// queue up the queries</span>
-</span><span class='line'><span class="nx">multi</span><span class="p">.</span><span class="nx">hgetall</span><span class="p">(</span><span class="nx">postURL</span><span class="p">);</span>
-</span><span class='line'><span class="nx">multi</span><span class="p">.</span><span class="nx">zrange</span><span class="p">(</span><span class="s1">&#39;comments-&#39;</span> <span class="o">+</span> <span class="nx">postURL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// execute the queries atomically</span>
-</span><span class='line'><span class="nx">multi</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">results</span><span class="p">){</span>
-</span><span class='line'>  <span class="cm">/*</span>
-</span><span class='line'><span class="cm">  results[0] will contain the post</span>
-</span><span class='line'><span class="cm">  results[1] will contain an array with all the comments</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<h2>Redis vs. PostgreSQL Performance</h2>
-
-<p>
-  In SQL you might do 1 query to get the post and another to get the comments, or use a join to get the post and the comments in one query. With the approach above, using Redis, 2 queries are atomically executed, using the multi and exec commands. Both in PostgreSQL, and Redis, a single request is sent the database to retrieve 1 post and its 10 comments.
-</p>
-
-<p>
-  To test the the performance I created a dataset that includes 10,000 &#8216;blog posts&#8217;, with each post having 10 comments (100,000 comments in total). All tests were run on a 2011 Macbook Pro (2.3 GHz i7, 8GB RAM). To test PostgreSQL, I sequentially fetched each post and used a join to retrieve its comments (10,000 separate queries). The test was repeated six times to produce an average time and was done for both PostgreSQL and Redis.
-</p>
-
-<div class="table">
-  <h2>Redis &amp; PostgreSQL Performance</h2>
-  <table>
-    <tr>
-      <th></th>
-      <th>Average Time (Seconds)</th>
-      <th>Query (Milliseconds)</th>
-    </tr>
-
-    <tr>
-      <td>psql</td>
-      <td>138.34</td>
-      <td>13.8</td>
-    </tr>
-
-    <tr>
-      <td>psql (Native Bindings - NB)</td>
-      <td>125.95</td>
-      <td>12.6</td>
-    </tr>
-
-    <tr>
-      <td>psql (NB + Index)</td>
-      <td>2.72</td>
-      <td>0.27</td>
-    </tr>
-
-    <tr>
-      <td>Redis (Hires)</td>
-      <td>0.76</td>
-      <td>0.067</td>
-    </tr>
-
-  </table>
-</div>
-
-<p>
-  Using PostgreSQL, it took an average of 138.34 seconds to execute all 10,000 queries, or 13.8 milliseconds/query. Using the native bindings, that come with the psql node module, yielded an improvement and was associated with 12.6 milliseconds/query. When an index was added to comments (post_id), the time dropped to 2.72 seconds, or 0.27 milliseconds for a post and its 10 comments. In contrast, Redis can retrieve a post and its comments in 0.067 milliseconds. Of course the above is akin to comparing apples to oranges, but it still provides a glimpse into the performance differences between Redis and PostgreSQL.
-</p>
-<p>
-  While Redis is in memory and should be fast, PostgreSQL uses caching algorithms (<a href="http://archives.postgresql.org/pgsql-hackers/2007-11/msg00562.php">LRU</a>) to keep its contents in memory. Of course, keeping everything in memory (Redis) will most likely be faster than using LRU.
-</p>
-
-<h2>Caveats to using Redis for Relational Data</h2>
-
-<p>
-  The single biggest caveat to using Redis, is that it is entirely in memory. If your relational dataset is 2.5GB (not that large), you&#8217;ll need a $160/month Linode (4GB RAM) to keep it in Redis. In contrast, a $20/month Linode (512MB RAM) has 20GB of disk space and could easily hold that same dataset using PostgreSQL. This tradeoff becomes even more of an issue as your dataset become larger than 4GB. 
-</p>
-
-<p>
-  The above example only represents a very simple relationship between two pieces of data (posts and comments), mapping a many-to-many relationship in Redis would take a little more imagination. 
-</p>
-
-<h2>Conclusions</h2>
-<p>
-  Before storing all your app&#8217;s data in Redis it&#8217;s advisable to estimate how large your dataset will be in a year, or two, and how much much RAM will be required to use Redis. If your dataset will be greater than 4GB in a year, and money is a constraint, it probably makes sense to put all, or a portion of the data, in PostgreSQL, or use an alternative noSQL solution (e.g. Riak or Mongo).
-</p>
-
-<p>
-<a class="github" href="https://github.com/liamks/Redis-and-Relational-Data"><span></span>Code on Github</a>
-</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1685,6 +1802,10 @@ To send the invites out, I went to Understoodit&#8217;s admin panel and seleted 
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/09/09/using-angularjs-promises/">Using AngularJS Promises</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/">How AngularJS Made Me a Better Node.js Developer</a>
       </li>
     
@@ -1698,10 +1819,6 @@ To send the invites out, I went to Understoodit&#8217;s admin panel and seleted 
     
       <li class="post">
         <a href="/blog/2013/02/08/three-important-conversion-metrics-you-should-watch/">Three Important Conversion Metrics You Should Watch</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/01/30/are-you-ready-to-launch/">Are You Ready To Launch?</a>
       </li>
     
   </ul>

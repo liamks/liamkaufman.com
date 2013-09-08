@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-08-06T08:17:21-04:00</updated>
+  <updated>2013-09-08T17:03:14-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -12,6 +12,299 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Using AngularJS Promises]]></title>
+    <link href="http://liamkaufman.com/blog/2013/09/09/using-angularjs-promises/"/>
+    <updated>2013-09-09T00:00:00-04:00</updated>
+    <id>http://liamkaufman.com/blog/2013/09/09/using-angularjs-promises</id>
+    <content type="html"><![CDATA[<p>
+  In my previous article I discussed the <a href="http://liamkaufman.com/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/">benefits of using dependency injection</a> to make code more testable and modular. In this article I’ll focus on using promises within an AngularJS application. This article assume some prior knowledge of promises (<a href="http://wildermuth.com/2013/8/3/JavaScript_Promises">a good intro on promises</a> and <a href="http://docs.angularjs.org/api/ng.$q">AngularJS&#8217; official documentation</a>).
+</p>
+
+<p>
+  Promises can be used to unnest asynchronous functions and allows one to chain multiple functions together - increasing readability and making individual functions, within the chain, more reusable.
+</p>
+
+<figure class='code'><figcaption><span>Standard Callbacks (no promises)</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">fetchData</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">cb</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">getDataFromServer</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class='line'>      <span class="nx">transformData</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">transformedResult</span><span class="p">){</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">){</span>
+</span><span class='line'>          <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class='line'>          <span class="nx">saveToIndexDB</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">savedData</span><span class="p">){</span>
+</span><span class='line'>            <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">savedData</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">});</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  Once <code>getDataFromServer()</code>, <code>transformData()</code> and <code>saveToIndexDB()</code> are converted to returning promises we can refactor the above code to:
+</p>
+
+<figure class='code'><figcaption><span>With Promises</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">fetchData</span><span class="p">(</span><span class="nx">id</span><span class="p">){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">getDataFromServer</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
+</span><span class='line'>          <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">transformData</span><span class="p">)</span>
+</span><span class='line'>          <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">saveToIndexDB</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  In addition to increasing readability promises can help with error handling, progress updates, and AngularJS templates.
+</p>
+
+<h2>Handling Errors</h2>
+<p>
+  If <code>fetchData</code> is called and an exception is raised in <code>transformData()</code> or <code>saveToIndexDB()</code>, it will trigger the final error callback.
+</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">fetchData</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">){</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// exceptions in transformData, or saveToIndexDB</span>
+</span><span class='line'>    <span class="c1">// will result in this error callback being called.</span>
+</span><span class='line'>  <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+   Unfortunately, if an exception is raised in <code>getDataFromServer()</code> it will not trigger the final error callback. This happens because <code>transformData()</code> and <code>saveToIndexDB()</code> are called within the context of <code>.then()</code>, which uses try-catch, and automatically calls <code>.reject()</code> on an exception. To bring this behaviour to the first function we can introduce a try-catch block like:
+</p>
+
+<figure class='code'><figcaption><span>getDataFromServer()</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getDataFromServer</span><span class="p">(</span><span class="nx">id</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">try</span><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// asynchronous function, which calls</span>
+</span><span class='line'>    <span class="c1">// deferred.resolve() on sucess</span>
+</span><span class='line'>  <span class="p">}</span><span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  While adding try-catch made <code>getDataFromServer()</code> less elegant, it makes it more robust and easier to use as the first in a chain of promises.
+</p>
+
+<h2>Using Notify for Progress Updates</h2>
+
+<p>
+  A promise can only be resolved, or rejected, once. To provide progress updates, which may happen zero or more times, a promise also includes a notify callback (introduced in AngularJS 1.2+). Notify could be used to provide incremental progress updates on a long running asynchronous task. Below is an example of a long running function, <code>processLotsOfData()</code>, that uses <code>notify</code> to provide progress updates.
+</p>
+ 
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">processLotsOfData</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class="p">[],</span>
+</span><span class='line'>      <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">(),</span>
+</span><span class='line'>      <span class="nx">percentComplete</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">output</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">processDataItem</span><span class="p">(</span><span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">]));</span>
+</span><span class='line'>    <span class="nx">percentComplete</span> <span class="o">=</span> <span class="p">(</span><span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span> <span class="o">*</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">notify</span><span class="p">(</span><span class="nx">percentComplete</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">output</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nx">processLotsOfData</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// success</span>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">){</span>
+</span><span class='line'>    <span class="c1">// error</span>
+</span><span class='line'>  <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">percentComplete</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">$scope</span><span class="p">.</span><span class="nx">progress</span> <span class="o">=</span> <span class="nx">percentComplete</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  Using the notify function, we can make many updates to the $scope&#8217;s progress variable before processLotsOfData is resolved (finished), making notify ideal for progress bars.
+</p>
+
+<p>
+  Unfortunately, using notify in a chain or promises is cumbersome since calls to notify do not bubble up. Every function in the chain would have to manually bubble up notifications, making code a little more difficult to read.
+</p>
+
+<h2>Templates</h2>
+
+<p>
+  AngularJS templates understand promises and delays their rendering until they&#8217;re resolved, or rejected. For instance let&#8217;s say our template looks like:
+</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;p>{{bio}}&lt;/p></span></code></pre></td></tr></table></div></figure>
+
+<p>
+  We could do the following in our controller:
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getBio</span><span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+</span><span class='line'>  <span class="c1">// async call, resolved after ajax request completes</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">$scope</span><span class="p">.</span><span class="nx">bio</span> <span class="o">=</span> <span class="nx">getBio</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>
+  The view renders normally, and when the promise is resolved AngularJS automatically updates the view to include the value resolved in getBio.
+</p>
+
+<h2>Limitations of Promises in AngularJS</h2>
+<p>
+  When a promise is resolved asynchronously, “in a future turn of the event loop”, the .resolve() function must be wrapped in a promise. In the contrived example below, a user would click a button triggering <code>goodbye()</code>, which should update the <code>$scope</code>&#8217;s greeting attribute. 
+</p>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">&#39;AppCtrl&#39;</span><span class="p">,</span>
+</span><span class='line'><span class="p">[</span>   <span class="s1">&#39;$scope&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s1">&#39;$q&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="kd">function</span> <span class="nx">AppCtrl</span><span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">$q</span><span class="p">){</span>
+</span><span class='line'>      <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="s2">&quot;hello&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>       <span class="kd">var</span> <span class="nx">updateGreeting</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">){</span>
+</span><span class='line'>          <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>              <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+</span><span class='line'>          <span class="p">},</span> <span class="mi">5</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+</span><span class='line'>       <span class="p">};</span>
+</span><span class='line'>      <span class="nx">$scope</span><span class="p">.</span><span class="nx">goodbye</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>          <span class="nx">$scope</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="nx">updateGreeting</span><span class="p">(</span><span class="s1">&#39;goodbye&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">]);</span>
+</span></code></pre></td></tr></table></div></figure>
+<p>
+  Unfortunately, it doesn&#8217;t work as expected, since the asynchronous event works outside of AngularJS&#8217; event loop. The fix for this (besides using AngularJS&#8217; setTimemout function), is to wrap the deferred&#8217;s resolve in <code>$scope.$apply</code> to trigger the digest cycle and update the <code>$scope</code> accordingly:
+</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">$apply</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>    <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'><span class="p">},</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<p>Jim Hoskins goes into more detail on using <code>$apply</code>: <a href="http://jimhoskins.com/2012/12/17/angularjs-and-apply.html">http://jimhoskins.com/2012/12/17/angularjs-and-apply.html</a></p>
+
+<h2>Conclusions</h2>
+<p>
+  Using promises is an important part of writing an AngularJS app idiomatically and should help make your code more readable. Understanding their shortcomings, and their strengths make them much easier to work with.
+</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[How AngularJS Made Me a Better Node.js Developer]]></title>
@@ -2905,78 +3198,6 @@ Trouble Shooting
 </p>
 <h3>Updates</h3>
 <p>Using coffeescript <a href="https://twitter.com/jamescarr">@jamescarr</a> refactored the above code so the server starts automatically during testing: <a href="https://github.com/jamescarr/socket.io-test">socket.io-test</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Examples I Want to See in JavaScript Frameworks.]]></title>
-    <link href="http://liamkaufman.com/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks/"/>
-    <updated>2011-12-13T00:00:00-05:00</updated>
-    <id>http://liamkaufman.com/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks</id>
-    <content type="html"><![CDATA[<p>
-  With the public release of <a href="http://emberjs.com">ember.js</a>,
-  I excitedly poured over the examples hoping to find a framework that 
-  would make Creating, Reading, Updating and Deleting (CRUD) easier. When
-  push comes to shove, the vast majority of apps that I&#8217;ve worked on
-  involve CRUD. 
-</p>
-
-<p>
-  I want to see the following (excuse the pseudo code):<br />
-<figure class='code'><figcaption><span>Model</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">model</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">validation</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">m</span><span class="p">){...}</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Controller</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">controller</span><span class="p">({</span>
-</span><span class='line'>  <span class="nx">show</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">index</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">new</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">create</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="p">...</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Form</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&#39;&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;text&#39;</span> <span class="na">name=</span><span class="s">&#39;firstName&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;submit&#39;</span> <span class="na">value=</span><span class="s">&#39;submit&#39;</span><span class="nt">&gt;</span>
-</span><span class='line'><span class="nt">&lt;/form&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-</p>
-
-<p>
-  Will your framework help me 1) write less code, 2) get things done
-  faster and 3) with less errors? Show me.
-</p>
-<p>
-  PS: I don&#8217;t want to diminish the tremendous effort it takes to create
-  a framework and release it, but please go the extra mile and provide
-  some concrete CRUD examples for a single class!
-</p>
 ]]></content>
   </entry>
   

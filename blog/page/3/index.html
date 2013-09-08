@@ -9,7 +9,7 @@
   <meta name="author" content="Liam Kaufman">
 
   
-  <meta name="description" content="I want to master JavaScript. Before humbly doing so, I think it’s important to define what I think mastering JS consists of. In my opinion there are &hellip;">
+  <meta name="description" content="With the public release of ember.js, I excitedly poured over the examples hoping to find a framework that would make Creating, Reading, Updating and &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,105 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/12/13/examples_i_want_to_see_in_javascript_frameworks/">Examples I Want to See in JavaScript Frameworks.</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-13T00:00:00-05:00" pubdate data-updated="true">Dec 13<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>
+  With the public release of <a href="http://emberjs.com">ember.js</a>,
+  I excitedly poured over the examples hoping to find a framework that 
+  would make Creating, Reading, Updating and Deleting (CRUD) easier. When
+  push comes to shove, the vast majority of apps that I&#8217;ve worked on
+  involve CRUD. 
+</p>
+
+<p>
+  I want to see the following (excuse the pseudo code):<br />
+<figure class='code'><figcaption><span>Model</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">model</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">validation</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">m</span><span class="p">){...}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>Controller</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">controller</span><span class="p">({</span>
+</span><span class='line'>  <span class="nx">show</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">index</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">new</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">create</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){...},</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+<figure class='code'><figcaption><span>Form</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">&#39;&#39;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;text&#39;</span> <span class="na">name=</span><span class="s">&#39;firstName&#39;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&#39;submit&#39;</span> <span class="na">value=</span><span class="s">&#39;submit&#39;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;/form&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+</p>
+
+<p>
+  Will your framework help me 1) write less code, 2) get things done
+  faster and 3) with less errors? Show me.
+</p>
+<p>
+  PS: I don&#8217;t want to diminish the tremendous effort it takes to create
+  a framework and release it, but please go the extra mile and provide
+  some concrete CRUD examples for a single class!
+</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -258,6 +357,10 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/09/09/using-angularjs-promises/">Using AngularJS Promises</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/">How AngularJS Made Me a Better Node.js Developer</a>
       </li>
     
@@ -271,10 +374,6 @@ Overall the process of learning Jekyll and Bootstrap was much easier than antici
     
       <li class="post">
         <a href="/blog/2013/02/08/three-important-conversion-metrics-you-should-watch/">Three Important Conversion Metrics You Should Watch</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/01/30/are-you-ready-to-launch/">Are You Ready To Launch?</a>
       </li>
     
   </ul>
