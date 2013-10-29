@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-09-08T17:03:14-04:00</updated>
+  <updated>2013-10-28T22:16:33-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -562,11 +562,11 @@
 </span></code></pre></td></tr></table></div></figure>
 
 <figure class='code'><figcaption><span>Result</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h1&gt;</span>A Person<span class="nt">&lt;/h1&gt;&lt;div</span> <span class="na">ng-transclude</span><span class="nt">&gt;&lt;div</span> <span class="na">person</span><span class="nt">&gt;</span>Ted<span class="nt">&lt;/div&gt;&lt;/div&gt;</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;h1&gt;</span>A Person<span class="nt">&lt;/h1&gt;&lt;div</span> <span class="na">ng-transclude</span><span class="nt">&gt;&lt;span</span> <span class="na">class=</span><span class="s">&quot;ng-scope&quot;</span><span class="nt">&gt;</span>Ted<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>
-  In the above example <code>transclude : true</code> tells Angular to take the contents of the DOM element, using this directive, and insert them into the person&#8217;s template. To specify where in the template the HTML will be transcluded include <code>ng-transclude</code> in the template.
+  In the above example <code>transclude : true</code> tells Angular to take the contents of the DOM element, using this directive, and insert them into the person&#8217;s template. To specify where in the template the HTML will be transcluded include <code>ng-transclude</code> in the template. The span, with class <code>ng-scope</scope> is inserted by AngularJS.
 </p>
 
 <p>
