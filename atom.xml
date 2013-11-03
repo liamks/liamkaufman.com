@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-10-28T22:17:27-04:00</updated>
+  <updated>2013-11-03T14:21:13-05:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -633,7 +633,7 @@
 <span class='line-number'>48</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">&#39;myApp&#39;</span><span class="p">,[]);</span>
 </span><span class='line'>
-</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">directive</span><span class="p">(</span><span class="s1">&#39;lk-repeat&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">directive</span><span class="p">(</span><span class="s1">&#39;lkRepeat&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
 </span><span class='line'>  <span class="k">return</span> <span class="p">{</span>
 </span><span class='line'>    <span class="nx">transclude</span> <span class="o">:</span> <span class="s1">&#39;element&#39;</span><span class="p">,</span>
 </span><span class='line'>    <span class="nx">compile</span> <span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nx">attr</span><span class="p">,</span> <span class="nx">linker</span><span class="p">){</span>
