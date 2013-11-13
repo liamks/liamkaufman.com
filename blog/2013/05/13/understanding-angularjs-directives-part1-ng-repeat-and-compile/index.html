@@ -272,7 +272,7 @@
   Above you&#8217;ll note that I&#8217;m removing all the elements from the DOM, and their scope, every time the collection updates. While this makes the code easier to understand, it is extremely inefficient having to remove everything then add it again. In the real version of <code>ng-repeat</code>, only elements that are removed from the collection, are removed from the DOM. Furthermore, if an item moves within the collection (e.g. 2nd to 4th place) it doesn&#8217;t need a new scope, but it needs to be moved in the DOM. Reading <code>ng-repeat</code>&#8217;s code gives me confidence that the team behind AngularJS has created a good, well tested and efficient framework.
 </p>
 <p>
-  In part 2 I plan on exploring another directive. If you have any recommendations let me know below, or via twitter.
+  <a href="/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view/">In part 2 I examine ngView, it&#8217;s implementation, hidden features and creating your own ngMultiView.</a>
 </p></div>
 
 
@@ -349,6 +349,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view/">Understanding AngularJS Directives Part 2: ngView</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/09/09/using-angularjs-promises/">Using AngularJS Promises</a>
       </li>
     
@@ -362,10 +366,6 @@
     
       <li class="post">
         <a href="/blog/2013/02/27/adding-real-time-to-a-restful-rails-app/">Adding Real-Time To A RESTful Rails App</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/02/08/three-important-conversion-metrics-you-should-watch/">Three Important Conversion Metrics You Should Watch</a>
       </li>
     
   </ul>

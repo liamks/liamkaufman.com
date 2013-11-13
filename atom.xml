@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-11-03T14:25:16-05:00</updated>
+  <updated>2013-11-13T08:12:28-05:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -12,6 +12,72 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Understanding AngularJS Directives Part 2: ngView]]></title>
+    <link href="http://liamkaufman.com/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view/"/>
+    <updated>2013-11-11T00:00:00-05:00</updated>
+    <id>http://liamkaufman.com/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view</id>
+    <content type="html"><![CDATA[<p>
+  In a previous article I <a href="blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">explored ng-repeat, it&#8217;s implementation, and how to create a custom repeater</a>. In this article I&#8217;ll first delve into the inner workings of ngView and then walk through the creation of an &#8220;ngMultiView&#8221; directive. To get the most out of this article you&#8217;ll need an intermediate understanding of creating directives (via  <a href="blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">the previous article on ng-repeat</a> and reading the <a href="http://docs.angularjs.org/guide/directive">the AngularJS directive guide</a>).
+</p>
+
+<p>
+  Starting with AngualrJS 1.2, the <code>ngView</code> directive, and the <code>$route</code> service were moved into a separate module called <code>ngRoute</code>. As a result, to use routes and <code>ngView</code> your app must explicitly declare it as a dependency. Furthermore, the syntax for the &#8220;otherwise&#8221; statement is slightly different from older versions of AngularJS. Below is a complete example of a tiny AngularJS 1.2 app with two routes and a default:
+</p>
+
+<iframe width="100%" height="300" src="http://jsfiddle.net/E259J/11/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<h2>Undocumented features of ngView</h2>
+<p>
+  In the process of understanding the code behind ngView I came across two undocumented attributes: &#8220;onload&#8221; and &#8220;autoscroll&#8221;. The onload attribute can take any Angular expression and will execute it every time the view changes. Autoscroll uses the <a href="http://docs.angularjs.org/api/ng.$anchorScroll">$autoScroll service</a> and scrolls to a specific element based on the current value of $location.hash(). Finally, near the very end of the directive, after <code>link(currentScope)</code> is called the <code>'$viewContentLoaded'</code> is emitted within the current scope - an event which you can use within your controller. Below is a revised version of the above example that includes the onload attribute.
+</p>
+
+<iframe width="100%" height="300" src="http://jsfiddle.net/E259J/12/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<h2>How ngView Works?</h2>
+
+<p>In order to understand ngView, I think it&#8217;s useful to create a simplified version of it. Below is ngViewLite, a version of ngView that does not include scope cleanup or animations, but is otherwise identical to ngView. </p>
+
+<iframe width="100%" height="400" src="http://jsfiddle.net/yr22b/26/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<p>
+  First, we bind a function <code>update</code> to the <code>$routeChangeSuccess</code>; when the route changes, update will be called. Right after attaching the function to the event we immediately call <code>update()</code> to load the initial contents into the view.
+</p>
+
+<p>
+  The update function checks if there is a defined template for the current route, if so it proceeds by calling the linker function, passing in a new scope, and a callback function. The callback function&#8217;s only parameter is the cloned element, whose html will be replaced with the route&#8217;s current template. The cloned element is then appended to div with the ng-view-lite attribute. Afterwhich we remove the previous contents from the view. 
+</p>
+
+<p>
+  Finally, the template must be compiled (<code>$compile(clone.contents())</code>) and a new scope is injected into it (<code>link(newScope)</code>). In between those two steps we check if the current route has an associated controller: if so we instantiate the controller with the newScope and the local variables from the current route.
+</p>
+
+<h2>Making an ngMultiView</h2>
+
+<p>
+  <code>ngView</code> works well, but what if you want multiple views to change according the url? According to the documentation </code>ngView</code> can only be used once within an application. To accomplish our <code>ngMultiView</code> we&#8217;ll slightly modify <code>ngView</code> and create an Angular value (<code>MultiViewPaths</code>) to hold the mapping between urls, views, controllers and templates.
+</p>
+
+<p>
+  In ngMultiView, a parameter is passed into the directive <code>&lt;div ng-multi-view=&quot;secondaryContent&quot;&gt;&lt;/div&gt;</code>, in the directive this attribute will be called &#8220;panel&#8221;. Instead of binding to the <code>'$routeChangeSuccess'</code> event, we&#8217;ll bind to <code>'$locationChangeSuccess'</code> to make our directive completely independent of <code>ngRoute</code>. ngMultiView will work the following way:
+
+</p>
+<ol>
+  <li>A url change will trigger <code>'$locationChangeSuccess'</code>, which in turn will call <code>update()</code></li>
+  <li>Within update: grab the portion of the URL after the hash (in the code this portion is just called url).</li>
+  <li>Using the url variable, and the panel, we can lookup the corresponding controller and template from the <code>MultiViewPaths</code> value.</li>
+  <li>Once we have the controller and template, ngMultiView works almost identically to <code>ngView</code>.</li>
+</ol>
+<iframe width="100%" height="300" src="http://jsfiddle.net/WKZ5N/27/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<p>
+  Our ngMultiView is very basic, it doesn&#8217;t take into account parameters being passed through urls, nor does it deal with scope cleanup, or animations. If you need more functionality I&#8217;d recommend starting with the <code>$routes</code> service and modifying it to accommodate multiple views.
+</p>
+<h2>Conclusion</h2>
+<p>
+  Creating custom directives can be intimidating at first. There&#8217;s a lot of jargon to overcome, and many little nuances. However, once those are overcome it becomes relatively easy to alter existing directives or create your own.
+</p>]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Using AngularJS Promises]]></title>
@@ -686,7 +752,7 @@
   Above you&#8217;ll note that I&#8217;m removing all the elements from the DOM, and their scope, every time the collection updates. While this makes the code easier to understand, it is extremely inefficient having to remove everything then add it again. In the real version of <code>ng-repeat</code>, only elements that are removed from the collection, are removed from the DOM. Furthermore, if an item moves within the collection (e.g. 2nd to 4th place) it doesn&#8217;t need a new scope, but it needs to be moved in the DOM. Reading <code>ng-repeat</code>&#8217;s code gives me confidence that the team behind AngularJS has created a good, well tested and efficient framework.
 </p>
 <p>
-  In part 2 I plan on exploring another directive. If you have any recommendations let me know below, or via twitter.
+  <a href="http://liamkaufman.com/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view/">In part 2 I examine ngView, it&#8217;s implementation, hidden features and creating your own ngMultiView.</a>
 </p>]]></content>
   </entry>
   
@@ -2745,461 +2811,6 @@ With <a href="http://gildas-lormeau.github.com/zip.js/">zip.js</a> files could b
 For more documentation and examples see Delivery.js on Github:<br />
 <a class="github" href="https://github.com/liamks/Delivery.js"><span></span>Delivery.js on Github</a>
 </p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Testing Socket.IO with Mocha, Should.js and Socket.IO Client]]></title>
-    <link href="http://liamkaufman.com/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client/"/>
-    <updated>2012-01-28T00:00:00-05:00</updated>
-    <id>http://liamkaufman.com/blog/2012/01/28/testing-socketio-with-mocha-should-and-socketio-client</id>
-    <content type="html"><![CDATA[<p>
-I’m currently in the midst of creating an application that utilizes <a href="http://socket.io/">Socket.IO</a> for real-time communication between users. Using  <a href="http://visionmedia.github.com/mocha/">mocha</a> and <a href="https://github.com/visionmedia/should.js">should.js</a> I was able to test objects within my node app. However, I quickly found that there were some odd synchronization issues between clients that the test cases couldn&#8217;t cover. To test the interaction between clients I needed a way to programatically communicate to my node server: Enter <a href="https://github.com/LearnBoost/socket.io-client">socket.io-client</a>.
-</p>
-<p>
-<a class="github" href="https://github.com/liamks/Testing-Socket.IO"><span></span>Testing Socket.IO on Github</a>
-</p>
-<h2>
-  Writing Tests For your Socket.io Application
-</h2>
-<p>
-As an example of how to test your socket.io application we’ll create a small chat application and test it using: <a href="https://github.com/LearnBoost/socket.io-client">socket.io-client</a>, <a href="http://visionmedia.github.com/mocha/">mocha</a> and <a href="https://github.com/visionmedia/should.js">should.js</a>.
-</p>
-<p>
-Our chat server should be able to:
-</p>
-<ol class='ordered-list'>
-  <li>broadcast that a new user has joined</li>
-  <li>broadcast messages to the whole group</li>
-  <li>handle private messages between clients</li>
-</ol>
-<p> 
-If you hit any roadblocks see <a href="#trouble-shooting">Trouble shooting</a> at the bottom of this post.
-</p>
-<p>
-Without further ado, below is the bare essentials for our socket.IO chat server (chat-server.js) and our tests (tests/test-chat-server.js).
-</p>
-<figure class='code'><figcaption><span>Server V0.1</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io&#39;</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-
-<figure class='code'><figcaption><span>Tests</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">should</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;should&#39;</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io-client&#39;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">socketURL</span> <span class="o">=</span> <span class="s1">&#39;http://0.0.0.0:5000&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span><span class="p">{</span>
-</span><span class='line'>  <span class="nx">transports</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;websocket&#39;</span><span class="p">],</span>
-</span><span class='line'>  <span class="s1">&#39;force new connection&#39;</span><span class="o">:</span> <span class="kc">true</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">var</span> <span class="nx">chatUser1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="o">:</span><span class="s1">&#39;Tom&#39;</span><span class="p">};</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">chatUser2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="o">:</span><span class="s1">&#39;Sally&#39;</span><span class="p">};</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">chatUser3</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="o">:</span><span class="s1">&#39;Dana&#39;</span><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;Chat Server&quot;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-<h3>First Test</h3>
-<p>
-Within the describe function (line 16 in tests) we will add our first test that determines if our chat server notifies all users that a new user has joined. It&#8217;s important to disconnect both clients once this test is over, otherwise the second test will trigger this test&#8217;s &#8216;new user&#8217; event.
-</p>
-
-<figure class='code'><figcaption><span>Test 1 - One user connects, both users should be notified.</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">it</span><span class="p">(</span><span class="s1">&#39;Should broadcast new user to all users&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">client1</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">client1</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">client1</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span> <span class="nx">chatUser1</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Since first client is connected, we connect</span>
-</span><span class='line'><span class="cm">    the second client. */</span>
-</span><span class='line'>    <span class="kd">var</span> <span class="nx">client2</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">client2</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">client2</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span> <span class="nx">chatUser2</span><span class="p">);</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">client2</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;new user&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">usersName</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">usersName</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">chatUser2</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; has joined.&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">client2</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">numUsers</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">client1</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;new user&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">usersName</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">numUsers</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="nx">numUsers</span> <span class="o">===</span> <span class="mi">2</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">usersName</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">chatUser2</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; has joined.&quot;</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">client1</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">();</span>
-</span><span class='line'>      <span class="nx">done</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-<p>
-Now that our first test is complete, let&#8217;s run the server.
-</p>
-<figure class='code'><figcaption><span>Run the server</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>node chat-server.js
-</span></code></pre></td></tr></table></div></figure>
-<p>
-In another terminal window we can run the tests.
-</p>
-<figure class='code'><figcaption><span>Run the tests </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>mocha -R spec
-</span></code></pre></td></tr></table></div></figure>
-<p>
-And both tests will fail (times out to be specific)! To pass the tests we simply update the chat-server.js to the following:
-</p>
-<figure class='code'><figcaption><span>Server V0.2</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io&#39;</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;new user&#39;</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; has joined.&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">})</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-<p>
-When you run the tests again they should both pass. 
-</p>
-
-<h3>Second Test</h3>
-<p>
-Now, we&#8217;ll add the second test that determines if a message sent from one client is sent to all the clients connected to the chat server. It may not initially be obvious why I&#8217;m using 3 clients, but it should be in the 3rd test. To determine if all 3 clients have received a message we keep a counter (messges) and check that each received message is the correct message.
-</p>
-<figure class='code'><figcaption><span>Test 2 - User sends a message to chat room</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">it</span><span class="p">(</span><span class="s1">&#39;Should be able to broadcast messages&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">client1</span><span class="p">,</span> <span class="nx">client2</span><span class="p">,</span> <span class="nx">client3</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;Hello World&#39;</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">messages</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">checkMessage</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">client</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">client</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">message</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">client</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">();</span>
-</span><span class='line'>      <span class="nx">messages</span><span class="o">++</span><span class="p">;</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">messages</span> <span class="o">===</span> <span class="mi">3</span><span class="p">){</span>
-</span><span class='line'>        <span class="nx">done</span><span class="p">();</span>
-</span><span class='line'>      <span class="p">};</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">client1</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>  <span class="nx">checkMessage</span><span class="p">(</span><span class="nx">client1</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">client1</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">client2</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">checkMessage</span><span class="p">(</span><span class="nx">client2</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">client2</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">client3</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">checkMessage</span><span class="p">(</span><span class="nx">client3</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="nx">client3</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>        <span class="nx">client2</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-<p>
-If you run the tests again it should fail! We can fix this by updating the server code to look like:
-</p>
-<figure class='code'><figcaption><span>Server V0.3</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io&#39;</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;new user&#39;</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; has joined.&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">msg</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-<h3>Third Test</h3>
-<p>With the first two bits of functionality complete, and tested, we now need to test that 1) a client can send a private message to another client and 2) no other clients receive that message. At minimum we need 3 clients to test this condition. Once all 3 clients have connected, the 3rd client will send a private message to the first client. It&#8217;s easy to test that the first client has received the message, but how do we test that the 2nd client has not? The solution I&#8217;m using below is that the test simply waits 40 milliseconds and if only 1 message has been received, there&#8217;s a strong chance that client 2 has not received a message. I&#8217;m not sure how to write the test to be 100% sure that the client has not received the message - any thoughts?
-</p>
-
-<figure class='code'><figcaption><span>Test 3 - User sends a private message to another user.</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">it</span><span class="p">(</span><span class="s1">&#39;Should be able to send private messages&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">done</span><span class="p">){</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">client1</span><span class="p">,</span> <span class="nx">client2</span><span class="p">,</span> <span class="nx">client3</span><span class="p">;</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span><span class="nx">to</span><span class="o">:</span> <span class="nx">chatUser1</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">txt</span><span class="o">:</span><span class="s1">&#39;Private Hello World&#39;</span><span class="p">};</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">messages</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">completeTest</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>    <span class="nx">messages</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">client1</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">();</span>
-</span><span class='line'>    <span class="nx">client2</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">();</span>
-</span><span class='line'>    <span class="nx">client3</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">();</span>
-</span><span class='line'>    <span class="nx">done</span><span class="p">();</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">checkPrivateMessage</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">client</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">client</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;private message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">message</span><span class="p">.</span><span class="nx">txt</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">txt</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">msg</span><span class="p">.</span><span class="nx">from</span><span class="p">.</span><span class="nx">should</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">chatUser3</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">messages</span><span class="o">++</span><span class="p">;</span>
-</span><span class='line'>      <span class="k">if</span><span class="p">(</span><span class="nx">client</span> <span class="o">===</span> <span class="nx">client1</span><span class="p">){</span>
-</span><span class='line'>        <span class="cm">/* The first client has received the message</span>
-</span><span class='line'><span class="cm">        we give some time to ensure that the others</span>
-</span><span class='line'><span class="cm">        will not receive the same message. */</span>
-</span><span class='line'>        <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">completeTest</span><span class="p">,</span> <span class="mi">40</span><span class="p">);</span>
-</span><span class='line'>      <span class="p">};</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>  <span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">client1</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>  <span class="nx">checkPrivateMessage</span><span class="p">(</span><span class="nx">client1</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">client1</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">client1</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span> <span class="nx">chatUser1</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">client2</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>    <span class="nx">checkPrivateMessage</span><span class="p">(</span><span class="nx">client2</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nx">client2</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>      <span class="nx">client2</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span> <span class="nx">chatUser2</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">client3</span> <span class="o">=</span> <span class="nx">io</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socketURL</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span><span class='line'>      <span class="nx">checkPrivateMessage</span><span class="p">(</span><span class="nx">client3</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="nx">client3</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
-</span><span class='line'>        <span class="nx">client3</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span> <span class="nx">chatUser3</span><span class="p">);</span>
-</span><span class='line'>        <span class="nx">client3</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;private message&#39;</span><span class="p">,</span> <span class="nx">message</span><span class="p">)</span>
-</span><span class='line'>      <span class="p">});</span>
-</span><span class='line'>    <span class="p">});</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-<p>
-Once again, running the tests should fail. Lets add code to enable private messages. Ideally we&#8217;d use Redis Pub/Sub to simplify message passing, but for the sake of brevity we&#8217;ll omit it here. We&#8217;ll keep track of clients and their sockets using the clients hash. The hashe&#8217;s key will be the client&#8217;s name, and the value will be the client&#8217;s socket. When the client disconnects we delete that entry from the hash.
-</p>
-<figure class='code'><figcaption><span>Server V0.4</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io&#39;</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
-</span><span class='line'><span class="kd">var</span> <span class="nx">clients</span> <span class="o">=</span> <span class="p">{};</span>
-</span><span class='line'>
-</span><span class='line'><span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kd">var</span> <span class="nx">userName</span><span class="p">;</span>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection name&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">userName</span> <span class="o">=</span> <span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>
-</span><span class='line'>    <span class="nx">clients</span><span class="p">[</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">socket</span><span class="p">;</span>
-</span><span class='line'>    <span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;new user&#39;</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s2">&quot; has joined.&quot;</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">msg</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;private message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">){</span>
-</span><span class='line'>    <span class="nx">fromMsg</span> <span class="o">=</span> <span class="p">{</span><span class="nx">from</span><span class="o">:</span><span class="nx">userName</span><span class="p">,</span> <span class="nx">txt</span><span class="o">:</span><span class="nx">msg</span><span class="p">.</span><span class="nx">txt</span><span class="p">}</span>
-</span><span class='line'>    <span class="nx">clients</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">to</span><span class="p">].</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;private message&#39;</span><span class="p">,</span> <span class="nx">fromMsg</span><span class="p">);</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;disconnect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
-</span><span class='line'>    <span class="k">delete</span> <span class="nx">clients</span><span class="p">[</span><span class="nx">userName</span><span class="p">];</span>
-</span><span class='line'>  <span class="p">});</span>
-</span><span class='line'><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure>
-<p>
-Congratulations, you have a node.js chat server and you&#8217;ve tested it!
-</p>
-<p>
-<a class="github" href="https://github.com/liamks/Testing-Socket.IO"><span></span>Testing Socket.IO on Github</a>
-</p>
-<h3 id="trouble-shooting">
-Trouble Shooting
-</h3>
-<p>
-<ul class='unordered-list'>
-  <li>Have you installed node.io-client, mocha and should?</li>
-  <li>Did you install any of the modules locally, but in another folder? If so try doing a global install.</li>
-  <li>Make sure you restart the server before each test run.</li>
-  <li>Running <code>mocha -R spec</code> will not work within the test folder, this command looks for the test folder, so <code>cd ..</code> if you&#8217;re in the test folder.</li>
-  <li>The version of socket.io-client that was in the npm repositories at the time of writing this <a href="https://github.com/LearnBoost/socket.io-client/issues/372">would not connect to the node server</a>. To get the latest version I ran: <code>npm install https://github.com/LearnBoost/socket.io-client/zipball/master</code></li>
-</ul>
-</p>
-<h3>Updates</h3>
-<p>Using coffeescript <a href="https://twitter.com/jamescarr">@jamescarr</a> refactored the above code so the server starts automatically during testing: <a href="https://github.com/jamescarr/socket.io-test">socket.io-test</a></p>
 ]]></content>
   </entry>
   
