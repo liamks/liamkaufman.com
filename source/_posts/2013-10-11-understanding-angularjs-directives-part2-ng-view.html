@@ -1,0 +1,65 @@
+---
+layout: post
+title: "Understanding AngularJS Directives Part 2: ngView"
+date: 2013-11-11
+comments: true
+---
+<p>
+  In a previous article I <a href="blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">explored ng-repeat, it's implementation, and how to create a custom repeater</a>. In this article I'll first delve into the inner workings of ngView and then walk through the creation of an "ngMultiView" directive. To get the most out of this article you'll need an intermediate understanding of creating directives (via  <a href="blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">the previous article on ng-repeat</a> and reading the <a href="http://docs.angularjs.org/guide/directive">the AngularJS directive guide</a>).
+</p>
+
+<p>
+  Starting with AngualrJS 1.2, the <code>ngView</code> directive, and the <code>$route</code> service were moved into a separate module called <code>ngRoute</code>. As a result, to use routes and <code>ngView</code> your app must explicitly declare it as a dependency. Furthermore, the syntax for the "otherwise" statement is slightly different from older versions of AngularJS. Below is a complete example of a tiny AngularJS 1.2 app with two routes and a default:
+</p>
+
+<iframe width="100%" height="300" src="http://jsfiddle.net/E259J/11/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<h2>Undocumented features of ngView</h2>
+<p>
+  In the process of understanding the code behind ngView I came across two undocumented attributes: "onload" and "autoscroll". The onload attribute can take any Angular expression and will execute it every time the view changes. Autoscroll uses the <a href="http://docs.angularjs.org/api/ng.$anchorScroll">$autoScroll service</a> and scrolls to a specific element based on the current value of $location.hash(). Finally, near the very end of the directive, after <code>link(currentScope)</code> is called the <code>'$viewContentLoaded'</code> is emitted within the current scope - an event which you can use within your controller. Below is a revised version of the above example that includes the onload attribute.
+</p>
+
+<iframe width="100%" height="300" src="http://jsfiddle.net/E259J/12/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<h2>How ngView Works?</h2>
+
+<p>In order to understand ngView, I think it's useful to create a simplified version of it. Below is ngViewLite, a version of ngView that does not include scope cleanup or animations, but is otherwise identical to ngView. </p>
+
+<iframe width="100%" height="400" src="http://jsfiddle.net/yr22b/26/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<p>
+  First, we bind a function <code>update</code> to the <code>$routeChangeSuccess</code>; when the route changes, update will be called. Right after attaching the function to the event we immediately call <code>update()</code> to load the initial contents into the view.
+</p>
+
+<p>
+  The update function checks if there is a defined template for the current route, if so it proceeds by calling the linker function, passing in a new scope, and a callback function. The callback function's only parameter is the cloned element, whose html will be replaced with the route's current template. The cloned element is then appended to div with the ng-view-lite attribute. Afterwhich we remove the previous contents from the view. 
+</p>
+
+<p>
+  Finally, the template must be compiled (<code>$compile(clone.contents())</code>) and a new scope is injected into it (<code>link(newScope)</code>). In between those two steps we check if the current route has an associated controller: if so we instantiate the controller with the newScope and the local variables from the current route.
+</p>
+
+<h2>Making an ngMultiView</h2>
+
+<p>
+  <code>ngView</code> works well, but what if you want multiple views to change according the url? According to the documentation </code>ngView</code> can only be used once within an application. To accomplish our <code>ngMultiView</code> we'll slightly modify <code>ngView</code> and create an Angular value (<code>MultiViewPaths</code>) to hold the mapping between urls, views, controllers and templates.
+</p>
+
+<p>
+  In ngMultiView, a parameter is passed into the directive <code>&lt;div ng-multi-view=&quot;secondaryContent&quot;&gt;&lt;/div&gt;</code>, in the directive this attribute will be called "panel". Instead of binding to the <code>'$routeChangeSuccess'</code> event, we'll bind to <code>'$locationChangeSuccess'</code> to make our directive completely independent of <code>ngRoute</code>. ngMultiView will work the following way:
+
+</p>
+<ol>
+  <li>A url change will trigger <code>'$locationChangeSuccess'</code>, which in turn will call <code>update()</code></li>
+  <li>Within update: grab the portion of the URL after the hash (in the code this portion is just called url).</li>
+  <li>Using the url variable, and the panel, we can lookup the corresponding controller and template from the <code>MultiViewPaths</code> value.</li>
+  <li>Once we have the controller and template, ngMultiView works almost identically to <code>ngView</code>.</li>
+</ol>
+<iframe width="100%" height="300" src="http://jsfiddle.net/WKZ5N/27/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<p>
+  Our ngMultiView is very basic, it doesn't take into account parameters being passed through urls, nor does it deal with scope cleanup, or animations. If you need more functionality I'd recommend starting with the <code>$routes</code> service and modifying it to accommodate multiple views.
+</p>
+<h2>Conclusion</h2>
+<p>
+  Creating custom directives can be intimidating at first. There's a lot of jargon to overcome, and many little nuances. However, once those are overcome it becomes relatively easy to alter existing directives or create your own.
+</p>

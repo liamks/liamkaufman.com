@@ -53,11 +53,13 @@ app.directive('person', function(){
 
 <h2>lk-repeat</h2>
 <p>Below <code>lk-repeat</code> is used the same way <code>ng-repeat</code> would be used.</p>
+{% raw %}
 ```html
 <ul>
   <li lk-repeat="name in names">{{name}}</li>
 </ul>
 ```
+{% endraw %}
 
 ```javascript
 var app = angular.module('myApp',[]);
@@ -113,5 +115,5 @@ app.directive('lkRepeat', function(){
   Above you'll note that I'm removing all the elements from the DOM, and their scope, every time the collection updates. While this makes the code easier to understand, it is extremely inefficient having to remove everything then add it again. In the real version of <code>ng-repeat</code>, only elements that are removed from the collection, are removed from the DOM. Furthermore, if an item moves within the collection (e.g. 2nd to 4th place) it doesn't need a new scope, but it needs to be moved in the DOM. Reading <code>ng-repeat</code>'s code gives me confidence that the team behind AngularJS has created a good, well tested and efficient framework.
 </p>
 <p>
-  In part 2 I plan on exploring another directive. If you have any recommendations let me know below, or via twitter.
+  <a href="/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view/">In part 2 I examine ngView, it's implementation, hidden features and creating your own ngMultiView.</a>
 </p>
