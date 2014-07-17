@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2013-11-13T08:12:28-05:00</updated>
+  <updated>2014-07-16T20:09:40-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -969,6 +969,11 @@ The advantage of this approach is that it only requires tiny modifications to a 
 </p>
 
 <h2>Alternatives To The Above</h2>
+<h3>[update July 2014]: Realtime Rails Gem</h3>
+<p>
+  Mike Atlas created a <a href="http://mikeatlas.github.io/realtime-rails/">realtime gem</a> which does all the above with minimal setup.
+</p>
+
 <h3>SockJS</h3>
 <p>
   Socket.IO could be swapped for <a href="https://github.com/sockjs/sockjs-client">SockJS</a>, which uses a similar API to websockets. I&#8217;ve heard from several individuals that it&#8217;s significantly more stable than the current version of Socket.IO and it&#8217;s currently <a href="https://github.com/meteor/meteor/tree/master/packages/stream">used by Meteor</a>.
