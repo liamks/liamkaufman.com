@@ -4,7 +4,7 @@
   <title><![CDATA[Liam Kaufman]]></title>
   <link href="http://liamkaufman.com/atom.xml" rel="self"/>
   <link href="http://liamkaufman.com/"/>
-  <updated>2014-07-16T20:09:40-04:00</updated>
+  <updated>2014-07-16T20:21:08-04:00</updated>
   <id>http://liamkaufman.com/</id>
   <author>
     <name><![CDATA[Liam Kaufman]]></name>
@@ -269,7 +269,8 @@
 <h2>Templates</h2>
 
 <p>
-  AngularJS templates understand promises and delays their rendering until they&#8217;re resolved, or rejected. For instance let&#8217;s say our template looks like:
+  <span style="text-decoration: line-through;">AngularJS templates understand promises and delays their rendering until they&#8217;re resolved, or rejected</span>. AngularJS templates no longer resolve promises - they must be resolved in the controller
+  before they&#8217;re assigned to the scope. For instance let&#8217;s say our template looks like:
 </p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -286,13 +287,17 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">function</span> <span class="nx">getBio</span><span class="p">(){</span>
 </span><span class='line'>  <span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
 </span><span class='line'>  <span class="c1">// async call, resolved after ajax request completes</span>
 </span><span class='line'>  <span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
 </span><span class='line'><span class="p">};</span>
 </span><span class='line'>
-</span><span class='line'><span class="nx">$scope</span><span class="p">.</span><span class="nx">bio</span> <span class="o">=</span> <span class="nx">getBio</span><span class="p">();</span>
+</span><span class='line'><span class="nx">getBio</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">bio</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">$scope</span><span class="p">.</span><span class="nx">bio</span> <span class="o">=</span> <span class="nx">bio</span><span class="p">;</span>
+</span><span class='line'><span class="p">});</span>
 </span></code></pre></td></tr></table></div></figure>
 
 <p>
