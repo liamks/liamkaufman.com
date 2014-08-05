@@ -129,7 +129,8 @@ processLotsOfData(data)
 <h2>Templates</h2>
 
 <p>
-  AngularJS templates understand promises and delays their rendering until they're resolved, or rejected. For instance let's say our template looks like:
+  <span style="text-decoration: line-through;">AngularJS templates understand promises and delays their rendering until they're resolved, or rejected</span>. AngularJS templates no longer resolve promises - they must be resolved in the controller
+  before they're assigned to the scope. For instance let's say our template looks like:
 </p>
 
 {% codeblock %} {% raw %}
@@ -147,7 +148,9 @@ function getBio(){
   return deferred.promise; 
 };
 
-$scope.bio = getBio();
+getBio().then(function(bio){
+  $scope.bio = bio;
+});
 ```
 
 <p>
