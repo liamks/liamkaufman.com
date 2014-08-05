@@ -1,0 +1,659 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Smiley Faces in Linux Source Code and Token Statistics - Liam Kaufman</title>
+  <meta name="author" content="Liam Kaufman">
+
+  
+  <meta name="description" content="Github uses Linguist, a Ruby library, to help detect which programming language is in a given file. Recently, an issue was filed that indicated that &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liamkaufman.com/blog/2014/08/05/smily-faces-in-linux-source-code">
+
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="alternate" title="Liam Kaufman" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-1004776-5']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+ 
+  <h1><a href="/">Liam Kaufman</a></h1>
+  
+    <h2>Software Developer and Entrepreneur</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="http://feeds.feedburner.com/liamkaufman/uHFr" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liamkaufman.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/projects.html">Projects</a></li>
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Smiley Faces in Linux Source Code and Token Statistics</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-08-05T00:00:00-04:00" pubdate data-updated="true">Aug 5<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>
+  Github uses <a href="https://github.com/github/linguist">Linguist</a>, a Ruby library, to help detect which programming language is in a given file. Recently, an issue was filed that indicated that Linguist incorrectly classifies Mercury (a programming language) files as Objective-c since they both use the same extension (.m). Linguist’s primary method for language detection is a file’s extension - a method that fell short for Mercury. If Mercury were added to Linguist, then their would be two languages with the same extension - and this is where things get interesting. If two languages share the same extension, or the file does not have an extension, Linguist has 3 methods for guessing the language. First it checks if the file has a shebang (<code>#!/bin/sh</code>). If there is no shebang the second method it uses is a set of <a href="https://github.com/github/linguist/blob/master/lib/linguist/heuristics.rb">heuristics</a>. For instance, if the file includes the “:-” token it concludes that the contents are prologue code, or if “defun” is present it’s common lisp. If it still hasn’t found a match the third method it uses is a <a href="https://github.com/github/linguist/blob/master/lib/linguist/classifier.rb">Bayesian classifier</a>. Roughly speaking the classifier iterates over all of a file’s tokens, and for each token determines the probability that it is present in each programming language. Subsequently, it sums all those probabilities, sorts the results, and returns an array of language-probability pairs (e.g <code>[[‘Ruby’, 0.8], [‘Python’, 0.2]]</code>). 
+</p>
+
+<p>
+  I wondered how logistic regression, support vector machines or even clustering algorithms would help in classifying a given file. As I dived into the data I realized that the descriptive statistics on tokens, and even ascii faces, would be nearly as interesting as their predictive power. Thus, this post will summarize the descriptive statistics, while in my next post I’ll cover using tokens to predict a file’s programming language.
+</p>
+
+<h2>Methods</h2>
+<h3>Fetching The Code</h3>
+<p>
+  Using Github’s API I fetched the 10 most popular repositories for 10 languages (c, haskell, go, javascript, java, lua, objective-c, ruby, python and php). Those 10 were chosen for their popularity, differing paradigms (e.g. Haskell vs Java), differing syntax (Haskell vs go) and overlapping syntaxes (C, JavaScript and Java). After retrieving a list of 100 repositories I downloaded the zip ball for each repo.
+</p>
+
+<h3>Tokenizing The Code</h3>
+<p>
+  First, a list of common programming tokens (eg: <code>; , . ( )</code>, etc) was created - tokens that would be found in many of the 10 languages of interest. Using those tokens I created a tokenizer that would output an object with the keys being tokens and their values being the number of times that the token occurred in the file. Base 10 numbers, hex numbers, strings (double quotes) and ‘characters’ (single quotes) were treated as 4 different token types. This was done so the number 8 was not treated as a different token from the number 44 (they are both tokenized as “numbers”). 
+</p>
+
+<p>
+  Each of the 100 repositories was traversed and non binary files were tokenized, with each file’s total token count stored in Redis’ sorted set data structure (sorted by number of occurrences). Using a sorted set made it trivial to retrieve the 1000 most common tokens from all 100 repositories. Each file was then re-tokenize, but only tokens that were present in the 1,000 most common token list were counted. A data set was created that included information on 65,804 files from 100 different repos. Along with the token data, the following data was also recorded: 1) the file’s extension, 2) it’s path within the repository, 3) it’s shebang, if present and 4) the token count for the first 250 most common tokens (I decided to limit my analysis on a smaller number of tokens for the first round of analysis). Finally, the counts for each token were converted to the ratio that that token occurred relative to the total occurrences. of all tokens (e.g. # of periods/total number of all tokens). The absolute number of tokens per file would be skewed by large files, which have more tokens. 
+</p>
+
+<h3>Counting Smiley Faces</h3>
+<p>
+  Two ease analysis I focused on c and JavaScript files (in c and JavaScript repositories): both languages have identical single and multi-line comment syntax. First, text from comments was separated from code. Second, the number of times an ascii face appeared in a given file’s comments was counted. The following “faces”:  <code>:( :) :-) :-D :p ;) ;-)</code> were counted.
+</p>
+<h3>Statistics</h3>
+<p>
+  All statistics were carried out using R. Welch Two Sample t-tests were used to compare groups.
+</p>
+
+<h2>Results</h2>
+<h3>Tokens</h3>
+<p>
+  While the top 1,000 tokens, by occurrence were recorded, only the top 20 are presented in Table 1 (<a href="https://github.com/liamks/languageStatisticsData/blob/master/top1000Tokens.csv">see here for the top 1,000</a>). Not surprisingly numbers are the most prevalent token, with commas coming a very close second. Interestingly, and what sparked my interest in ascii smiley faces, is that there are slightly more right parentheses than left. While the contents of strings were ignored, the contents of comments were not. Seeing as most (all?) of the analyzed languages require parenthesis to be balanced I presumed that the imbalance might be caused by ascii smiley faces in comments.
+</p>
+<p>
+  Interestingly, hexidecimal numbers were the 6th most common token despite rarely being used outside of c. While hex numbers are used extensively in CSS, I only classified numbers that started with &#8216;x&#8217; as being hex, which precluded the hex numbers in CSS from being included.
+</p>
+<style type="text/css">
+  .largest {
+    font-weight: bold;
+    background-color: yellow  ;
+  }
+  .table-alternate tr:nth-child(odd){
+    background-color:#ddd;
+  }
+
+  .alternate {
+    background-color:#ddd;
+  }
+
+  .normal {
+    background-color: #efefef;
+  }
+
+  .fixed-column{
+    position: absolute;
+    display: inline-block;
+    width: auto;
+  }
+</style>
+<script type="text/javascript">
+  $.domReady(function(){
+      var $table = $('.table-fixed');
+      //Make a clone of our table
+      var $firstColumnItems = $table.find('th:first-child,td:first-child');
+
+      var firstColumnHeaderWidth = $($firstColumnItems[0]).width();
+
+      //Match the height of the rows to that of the original table's
+      $firstColumnItems.each(function (elem, i) {
+          var node = this.cloneNode();
+          node.textContent = $(this).text();
+          
+          $(node).addClass(i%2 === 0  ? 'alternate' : 'normal');
+          $(node).height($(this).height());
+          $(node).width(firstColumnHeaderWidth);
+          $(node).addClass('fixed-column');
+          $(this).before(node);
+      });
+  });
+</script>
+
+<div class="table table-alternate">
+  <h2>Table 1. Top 20 Tokens By Occurence</h2>
+  <table>
+    <tr><th>Token</th><th>Occurrences</th></tr>
+    <tr><td>Numbers</td><td>19,640,325</td></tr>
+    <tr><td>,</td><td>19,597,223</td></tr>
+    <tr><td>)</td><td>10,446,695</td></tr>
+    <tr><td>(</td><td>10,425,221</td></tr>
+    <tr><td>;</td><td>7,882,261</td></tr>
+    <tr><td>Hex Numbers</td><td>6,261,887</td></tr>
+    <tr><td>*</td><td>6,205,697</td></tr>
+    <tr><td>.</td><td>5,978,092</td></tr>
+    <tr><td>=</td><td>5,841,844</td></tr>
+    <tr><td>Strings (Double Quotes - DQ)</td><td>4,336,520</td></tr>
+    <tr><td>}</td><td>3,310,463</td></tr>
+    <tr><td>{</td><td>3,305,033</td></tr>
+    <tr><td>/</td><td>2,939,954</td></tr>
+    <tr><td>:</td><td>2,640,872</td></tr>
+    <tr><td>-&gt;</td><td>2,425,261</td></tr>
+    <tr><td>#</td><td>2,423,779</td></tr>
+    <tr><td>[</td><td>2,004,437</td></tr>
+    <tr><td>]</td><td>2,002,711</td></tr>
+    <tr><td>&lt;</td><td>1,591,276</td></tr>
+    <tr><td>Strings (Single Quotes - SQ)</td><td>1,578,686</td></tr>
+  </table>
+  <p>
+    The top 20 tokens, by occurrence in aggregate (across 65,804 files).
+  </p>
+</div>
+
+<p>
+  Table 2 shows the top 20 tokens and their ratios (token/all tokens in a given file) in 16 different file types. Not surprisingly JSON files lead the pack for double quoted strings, curly brackets, colons and commas. Likewise, Clojure leads by having the highest proportion of parentheses. The right arrow <code>-></code> occurred most often in Php, C and Haskell. Finally, square brackets were very prevalent in Objective-C.
+</p>
+
+<div class="table table-large table-alternate table-fixed" style="overflow:scroll;">
+  <h2>Table 2. Top 20 Tokens (Scroll Right For Full Table)</h2>
+  <table style="width:2200px;">
+    <tr>
+      <th>File Type</th>
+      <th># Files</th>
+      <th>Numbers</th>
+      <th>,</th>
+      <th>)</th>
+      <th>(</th>
+      <th>;</th>
+      <th>Hex Numbers</th>
+      <th>*</th>
+      <th>.</th>
+      <th>=</th>
+      <th>Strings (DQ)</th>
+      <th>}</th>
+      <th>{</th>
+      <th>/</th>
+      <th>:</th>
+      <th>-&gt;</th>
+      <th>#</th>
+      <th>[</th>
+      <th>]</th>
+      <th>&lt;</th>
+      <th>Strings (SQ)</th>
+    </tr>
+    <tr>
+      <td>.php</td><td>10289</td><td>0.0106</td><td>0.0280</td><td>0.0634</td><td>0.0632</td><td>0.0406</td><td>0.0000</td><td>0.0463</td><td>0.0257</td><td>0.0172</td><td>0.0054</td><td>0.0219</td><td>0.0218</td><td>0.0187</td><td>0.0077</td><td class="largest">0.0239</td><td>0.0004</td><td>0.0042</td><td>0.0042</td><td>0.0126</td><td>0.0375</td>
+    </tr>
+    <tr>
+      <td>.json</td><td>1002</td><td>0.0183</td><td class="largest">0.1510</td><td>0.0001</td><td>0.0001</td><td>0.0000</td><td>0</td><td>0.0001</td><td>0.0011</td><td>0.0001</td><td class="largest">0.3575</td><td class="largest">0.0927</td><td class="largest">0.0930</td><td>0.0000</td><td class="largest">0.2163</td><td>0</td><td>0.0001</td><td>0.0179</td><td>0.0179</td><td>0.0001</td><td>0.0001</td>
+    </tr>
+    <tr>
+      <td>.md</td><td>1541</td><td>0.0317</td><td>0.0238</td><td>0.0250</td><td>0.0248</td><td>0.0030</td><td>0.0001</td><td>0.0146</td><td>0.0559</td><td>0.0063</td><td>0.0108</td><td>0.0039</td><td>0.0038</td><td>0.0012</td><td>0.0251</td><td>0.0006</td><td>0.0251</td><td>0.0127</td><td>0.0127</td><td>0.0066</td><td>0.0064</td>
+    </tr>
+    <tr>
+      <td>.hs</td><td>6133</td><td>0.0416</td><td>0.0224</td><td>0.0426</td><td>0.0424</td><td>0.0014</td><td>0.0002</td><td>0.0025</td><td>0.0253</td><td>0.0407</td><td>0.0121</td><td>0.0123</td><td>0.0123</td><td>0.0006</td><td>0.0051</td><td>0.0179</td><td>0.0229</td><td>0.0090</td><td>0.0091</td><td>0.0019</td><td>0.0060</td>
+    </tr>
+    <tr>
+      <td>.html</td><td>1579</td><td>0.0211</td><td>0.0091</td><td>0.0117</td><td>0.0116</td><td>0.0154</td><td>0.0000</td><td>0.0007</td><td>0.0252</td><td>0.0463</td><td>0.0482</td><td>0.0295</td><td>0.0295</td><td>0.0033</td><td>0.0099</td><td>0.0003</td><td>0.0270</td><td>0.0016</td><td>0.0016</td><td>0.1150</td><td>0.0052</td>
+    </tr>
+    <tr>
+      <td>.css</td><td>701</td><td class="largest">0.0811</td><td>0.0212</td><td>0.0083</td><td>0.0083</td><td class="largest">0.0676</td><td>0.0000</td><td>0.0219</td><td>0.0564</td><td>0.0023</td><td>0.0050</td><td>0.0392</td><td>0.0394</td><td>0.0169</td><td>0.0779</td><td>0</td><td>0.0194</td><td>0.0011</td><td>0.0011</td><td>0.0001</td><td>0.0018</td>
+    </tr>
+    <tr>
+      <td>.js</td><td>9089</td><td>0.0290</td><td>0.0681</td><td>0.0646</td><td>0.0639</td><td>0.0436</td><td>0.0005</td><td>0.0075</td><td>0.0574</td><td>0.0239</td><td>0.0328</td><td>0.0226</td><td>0.0220</td><td>0.0043</td><td>0.0203</td><td>0.0000</td><td>0.0004</td><td>0.0086</td><td>0.0086</td><td>0.0013</td><td>0.0251</td>
+    </tr>
+    <tr>
+      <td>.py</td><td>3081</td><td>0.0211</td><td>0.0483</td><td>0.0539</td><td>0.0537</td><td>0.0008</td><td>0.0001</td><td>0.0024</td><td>0.0670</td><td>0.0364</td><td>0.0213</td><td>0.0018</td><td>0.0018</td><td>0.0003</td><td>0.0278</td><td>0.0000</td><td class="largest">0.0294</td><td>0.0092</td><td>0.0093</td><td>0.0008</td><td>0.0376</td>
+    </tr>
+    <tr>
+      <td>.c</td><td>25043</td><td>0.0536</td><td>0.0560</td><td>0.0573</td><td>0.0573</td><td>0.0555</td><td class="largest">0.0077</td><td>0.0469</td><td>0.0248</td><td>0.0276</td><td>0.0110</td><td>0.0156</td><td>0.0155</td><td>0.0174</td><td>0.0050</td><td>0.0194</td><td>0.0120</td><td>0.0053</td><td>0.0053</td><td>0.0078</td><td>0.0017</td>
+    </tr>
+    <tr>
+      <td>.xml</td><td>1788</td><td>0.0127</td><td>0.0055</td><td>0.0022</td><td>0.0022</td><td>0.0026</td><td>0.0000</td><td>0.0005</td><td>0.0146</td><td class="largest">0.0925</td><td>0.0993</td><td>0.0014</td><td>0.0014</td><td class="largest">0.0191</td><td>0.0315</td><td>0.0000</td><td>0.0060</td><td>0.0005</td><td>0.0005</td><td class="largest">0.1242</td><td>0.0006</td>
+    </tr>
+    <tr>
+      <td>.clj</td><td>83</td><td>0.0183</td><td>0.0064</td><td class="largest">0.0946</td><td class="largest">0.0944</td><td>0.0529</td><td>0</td><td>0.0014</td><td>0.0462</td><td>0.0034</td><td>0.0239</td><td>0.0049</td><td>0.0049</td><td>0.0001</td><td>0.0189</td><td>0.0026</td><td>0.0015</td><td>0.0339</td><td>0.0339</td><td>0.0001</td><td>0.0005</td>
+    </tr>
+    <tr>
+      <td>.rb</td><td>8527</td><td>0.0229</td><td>0.0479</td><td>0.0264</td><td>0.0263</td><td>0.0013</td><td>0.0001</td><td>0.0018</td><td>0.0539</td><td>0.0148</td><td>0.0510</td><td>0.0062</td><td>0.0062</td><td>0.0009</td><td>0.0446</td><td>0.0002</td><td>0.0166</td><td>0.0086</td><td>0.0087</td><td>0.0141</td><td class="largest">0.0530</td>
+    </tr>
+    <tr>
+      <td>.java</td><td>12293</td><td>0.0157</td><td>0.0262</td><td>0.0488</td><td>0.0488</td><td>0.0433</td><td>0.0001</td><td class="largest">0.0525</td><td class="largest">0.0930</td><td>0.0104</td><td>0.0118</td><td>0.0186</td><td>0.0185</td><td>0.0137</td><td>0.0032</td><td>0.0000</td><td>0.0009</td><td>0.0018</td><td>0.0018</td><td>0.0050</td><td>0.0005</td>
+    </tr>
+    <tr>
+      <td>.go</td><td>1259</td><td>0.0265</td><td>0.0569</td><td>0.0684</td><td>0.0684</td><td>0.0043</td><td>0.0029</td><td>0.0108</td><td>0.0688</td><td>0.0111</td><td>0.0370</td><td>0.0340</td><td>0.0339</td><td>0.0009</td><td>0.0104</td><td>0.0000</td><td>0.0002</td><td>0.0106</td><td>0.0106</td><td>0.0014</td><td>0.0017</td>
+    </tr>
+    <tr>
+      <td>.lua</td><td>3935</td><td>0.0342</td><td>0.0783</td><td>0.0526</td><td>0.0525</td><td>0.0020</td><td>0.0008</td><td>0.0017</td><td>0.0463</td><td>0.0634</td><td>0.0448</td><td>0.0173</td><td>0.0171</td><td>0.0008</td><td>0.0166</td><td>0.0001</td><td>0.0013</td><td>0.0158</td><td>0.0157</td><td>0.0010</td><td>0.0193</td>
+    </tr>
+    <tr>
+      <td>.m</td><td>742</td><td>0.0333</td><td>0.0261</td><td>0.0530</td><td>0.0530</td><td>0.0580</td><td>0.0001</td><td>0.0201</td><td>0.0327</td><td>0.0246</td><td>0.0181</td><td>0.0190</td><td>0.0190</td><td>0.0049</td><td>0.0353</td><td>0.0003</td><td>0.0120</td><td class="largest">0.0345</td><td class="largest">0.0345</td><td>0.0018</td><td>0.0005</td>
+    </tr>
+  </table>
+  <p>
+    The ratio of a specific tokens, relative to all tokens in a file, by file type. Only the top 16 file types are present in this table - there is a very long tail of file types. I restricted this table to file types that are relatively abundant in this dataset.
+  </p>
+</div>
+
+<h3>ASCII Faces</h3>
+<p>
+  To examine the discrepancy between left and right parenthesis I created a set of scripts to separate comments from code, in c and JavaScript files. Second, I then analyzed the comments and counted the number of ascii faces that appeared. I focused on 6 different types of smiley faces and I included 1 type of frown (See Table 3 for types of ascii faces and amount found).
+</p>
+<p>
+   While there were more frowns in JavaScript files, the difference wasn&#8217;t statistically significant. Furthermore there was not a statistically significant difference between the total smiley faces between &#8216;.c&#8217; and &#8216;.js&#8217; files. However, there were more smiley faces in files that were in &#8220;JavaScript&#8221; github repos. For instance, Node is a JavaScript repo but includes both JavaScript and c files. This makes sense that the project, with its distinct maintainers, rules and conventions is more important in determining the number of smiley faces.
+</p>
+<p>
+  Eighty percent of c files analyzed were found in the Linux repository, so it made sense to focus on Linux specifically. In Linux c comments I found 631 smiley faces and 73 frowns. In linux the most prevalent smiley faces was `:-)` followed by `:)` (See Table 3.).
+</p>
+<div class="table">
+  <h2> Table 3. Ascii faces</h2>
+  <table>
+    <tr>
+      <th></th>
+      <th>Linux c files (20,060)</th>
+      <th>c files (24,542)</th>
+      <th>JavaScript files (6,743)</th>
+    </tr>
+    <tr>
+      <td>All Smiley Faces</td>
+      <td>0.0315 (631)</td>
+      <td>0.0577 (1415)</td>
+      <td>0.0721 (486)</td>
+    </tr>
+     <tr>
+      <td>Frowns :(</td>
+      <td>0.0036 (73)</td>      
+      <td>0.0051 (124)</td>
+      <td>0.0249 (168)</td>
+    </tr>
+     <tr>
+      <td>:)</td>
+      <td>0.0088 (172)</td>
+      <td>0.0081 (198)</td>
+      <td>0.0027 (18)</td>
+    </tr>
+     <tr>
+      <td>:-)</td>
+      <td>0.0088 (176)</td>
+      <td>0.0284 (697)</td>
+      <td>0.0001 (1)</td>
+    </tr>
+     <tr>
+      <td>:-D</td>
+      <td>0.0001 (2)</td>
+      <td>0.0001 (3)</td>
+      <td>0.0006 (4)</td>
+    </tr>
+     <tr>
+      <td>:p</td>
+      <td>0.0051 (102)</td>
+      <td>0.0120 (295)</td>
+      <td>0.0475 (320)</td>
+    </tr>
+     <tr>
+      <td>;)</td>
+      <td>0.0044 (89)</td>
+      <td>0.0048 (117)</td>
+      <td>0.0212 (143)</td>
+    </tr>
+     <tr>
+      <td>;-)</td>
+      <td>0.0044 (90)</td>
+      <td>0.0043 (105)</td>
+      <td>0.0000 (0)</td>
+    </tr>
+  </table>
+  <p>
+    The first value is the number of times the ascii faces appears, relative to other tokens, while the value in brackets is the total number of times that it appears in all files. Linux c files are a subset of the c files.
+  </p>
+</div>
+
+<h2>Discussion</h2>
+<h3>Shortcomings</h3>
+<p>
+  Despite including 100 different repositories, Linux source files represented 30% of all files in this analysis. Ideally, the number of files from each repository, and language, would be balanced. One approach would be to randomly select a numerically identical subset of files from each language. While this approach might be valid statistically it wouldn&#8217;t produce descriptive statistics on each repository, just a subset of files within each repository. Alternatively Linux could be excluded from the analysis since the number of files it contains is an outlier, relative to the other repositories.
+</p>
+<p>
+  In all files there were 21,474 more right parenthesis than left. Given that c and JavaScript files represent nearly half of all files in this analysis, and they only had 1,901 smiley faces, it&#8217;s unlikely that the other half of the files had a nearly 20,000 smiley faces - or enough to account for the left and right parenthesis. Future analysis could attempt to locate the source for this difference (presumably within comments).
+</p>
+<h2>Conclusions</h2>
+<p>
+  It is not surprising that ratios of token types can differ dramatically between different languages, however, I was surprised that several tokens (parenthesis, square &amp; curly brackets) did not occur equally. While smiley faces can account for part of this discrepancy, they most likely do not account for all of it.  
+</p>
+<p>
+  The biggest surprise was that number of smiley faces per file was not statistically different between JavaScript and C. Being low level I presumed that C code would be more serious, with fewer ascii faces. Interestingly, I was wrong and C code has a similar amount of smiley faces relative to JavaScript.
+</p>
+<p>
+  Viewing Table 2 we can start to see some patterns and differences in token ratios that might help to predict a file&#8217;s language. For instance, JSON has very different token ratios than C. In the next article I will explore the power that tokens have in predicting which programming language is being used in a given file.
+</p>
+<p>
+  If you&#8217;re interested in replicating the analysis, or obtaining the dataset, please see the links below:
+</p>
+
+<p>
+<a class="github" href="https://github.com/liamks/languageStatistics"><span></span>Language Statistics</a>
+</p>
+<p>
+<a class="github" href="https://github.com/liamks/languageStatisticsData"><span></span>Language Statistics Data</a>
+</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Liam Kaufman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-08-05T00:00:00-04:00" pubdate data-updated="true">Aug 5<span>th</span>, 2014</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  <a href="http://news.ycombinator.com/submit" class="hn-share-button">Vote on HN</a>
+
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liamkaufman.com/blog/2014/08/05/smily-faces-in-linux-source-code/" data-via="liamkaufman" data-counturl="http://liamkaufman.com/blog/2014/08/05/smily-faces-in-linux-source-code/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view/" title="Previous Post: Understanding AngularJS Directives Part 2: ngView">&laquo; Understanding AngularJS Directives Part 2: ngView</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  <div class='social'>
+
+  <a id="twitter" href="https://twitter.com/liamkaufman"><span></span>@liamkaufman</a>
+  <a id="github" href="https://github.com/liamks"><span></span>@liamks</a>
+  <a id="linked-in" href="http://www.linkedin.com/pub/liam-kaufman/1b/7b4/2a4"><span></span>Liam Kaufman</a> 
+</div>
+
+
+  <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/08/05/smily-faces-in-linux-source-code/">Smiley Faces in Linux Source Code and Token Statistics</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/11/11/understanding-angularjs-directives-part2-ng-view/">Understanding AngularJS Directives Part 2: ngView</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/09/09/using-angularjs-promises/">Using AngularJS Promises</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/08/06/how-angularjs-made-me-a-better-nodejs-developer/">How AngularJS Made Me a Better Node.js Developer</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/05/13/understanding-angularjs-directives-part1-ng-repeat-and-compile/">Understanding AngularJS Directives Part 1: ng-repeat and compile</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("liamkaufman", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <p>Follow <a href="http://twitter.com/liamkaufman">@liamkaufman</a></p>
+  
+</section>
+
+
+
+
+
+
+
+
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Liam Kaufman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2014/08/05/smily-faces-in-linux-source-code/';
+        var disqus_url = 'http://liamkaufman.com/blog/2014/08/05/smily-faces-in-linux-source-code/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+    
+
+<script type="text/javascript">
+      var disqus_shortname = 'liamkaufman';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liamkaufman.com/blog/2014/08/05/smily-faces-in-linux-source-code/';
+        var disqus_url = 'http://liamkaufman.com/blog/2014/08/05/smily-faces-in-linux-source-code/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  <script>
+    (function(d, t) {
+        var g = d.createElement(t),
+            s = d.getElementsByTagName(t)[0];
+        g.src = '//hnbutton.appspot.com/static/hn.js';
+        s.parentNode.insertBefore(g, s);
+    }(document, 'script'));
+  </script>
+</body>
+</html>
